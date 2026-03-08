@@ -1,0 +1,79 @@
+@model IEnumerable<DrMohamedWeb.Core.Entities.PatientVisit>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "زيارات المريض";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+    <div>
+        <h2 class="text-secondary mb-0"><i class="fas fa-calendar-alt me-2"></i>زيارات المريض: <span class="text-primary fw-bold">@ViewBag.PatientName</span></h2>
+    </div>
+    <div>
+        <a asp-controller="Patients" asp-action="Index" class="btn btn-outline-secondary me-2">عودة لمعرض المرضى</a>
+        <a asp-action="Create" asp-route-patientId="@ViewBag.PatientId" class="btn btn-success"><i class="fas fa-plus me-1"></i> إضافة زيارة جديدة</a>
+    </div>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    @foreach (var visit in Model)
+    {
+        <div class="card shadow-sm mb-4 border-0 border-start border-4 border-info">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-info">تاريخ الزيارة: @visit.VisitDate.ToString("yyyy-MM-dd")</h5>
+                <a asp-controller="TestResults" asp-action="Upload" asp-route-visitId="@visit.Id" class="btn btn-sm btn-primary">
+                    <i class="fas fa-upload me-1"></i> رفع نتائج فحص PDF
+                </a>
+            </div>
+            <div class="card-body bg-light">
+                @if (!string.IsNullOrEmpty(visit.Notes))
+                {
+                    <p class="mb-3 text-muted"><strong>ملاحظات:</strong> @visit.Notes</p>
+                }
+
+                @if (visit.TestResults != null && visit.TestResults.Any())
+                {
+                    <h6 class="fw-bold mb-2">النتائج المرفوعة لهذه الزيارة:</h6>
+                    <div class="list-group">
+                        @foreach (var test in visit.TestResults)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                                    <strong>@test.TestName</strong> 
+                                    <small class="text-muted ms-2">(تم الرفع: @test.UploadedAt.ToString("g"))</small>
+                                </div>
+                                <div>
+                                    <a href="@test.FilePath" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
+                                        <i class="fas fa-eye"></i> عرض
+                                    </a>
+                                    <form asp-controller="TestResults" asp-action="Delete" asp-route-id="@test.Id" method="post" class="d-inline border-0 p-0 m-0" onsubmit="return confirm('هل أنت متأكد من مسح هذه النتيجة؟');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning mb-0 py-2">
+                        <i class="fas fa-exclamation-triangle me-1"></i> لم يتم رفع أي نتائج لهذه الزيارة بعد.
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-info py-4 text-center shadow-sm">
+        <i class="fas fa-info-circle fa-2x mb-3 text-info"></i>
+        <h5>لا يوجد زيارات مسجلة لهذا المريض</h5>
+        <p>قم بإضافة زيارة جديدة للبدء في رفع نتائج التحاليل.</p>
+        <a asp-action="Create" asp-route-patientId="@ViewBag.PatientId" class="btn btn-success mt-2"><i class="fas fa-plus me-1"></i> إضافة أول زيارة</a>
+    </div>
+}

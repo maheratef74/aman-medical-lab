@@ -1,0 +1,56 @@
+@model IEnumerable<DrMohamedWeb.Core.Entities.Patient>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "المرضى";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+    <h2 class="text-secondary"><i class="fas fa-users me-2"></i>قائمة المرضى</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus me-1"></i> إضافة مريض جديد</a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>الرقم التعريفي</th>
+                        <th>اسم المريض</th>
+                        <th>رقم الهاتف</th>
+                        <th>تاريخ التسجيل</th>
+                        <th class="text-center">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td class="fw-bold text-primary">@item.Name</td>
+                                <td>@item.PhoneNumber</td>
+                                <td>@item.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                <td class="text-center">
+                                    <a asp-controller="Visits" asp-action="Index" asp-route-patientId="@item.Id" class="btn btn-sm btn-info text-white">
+                                        <i class="fas fa-calendar-alt me-1"></i> الزيارات والنتائج
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                لا يوجد مرضى مسجلين حالياً.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

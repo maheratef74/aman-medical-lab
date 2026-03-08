@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        #wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+        }
+        #sidebar {
+            min-width: 250px;
+            max-width: 250px;
+            background: #2c3e50;
+            color: #fff;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        #sidebar.active {
+            margin-right: -250px;
+        }
+        #sidebar .sidebar-header {
+            padding: 20px;
+            background: #1a252f;
+        }
+        #sidebar ul.components {
+            padding: 20px 0;
+        }
+        #sidebar ul p {
+            color: #fff;
+            padding: 10px;
+        }
+        #sidebar ul li a {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            display: block;
+            color: #ecf0f1;
+            text-decoration: none;
+        }
+        #sidebar ul li a:hover {
+            color: #2c3e50;
+            background: #ecf0f1;
+        }
+        #content {
+            width: 100%;
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <!-- Sidebar  -->
+        <nav id="sidebar">
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
+                <h3>معمل أمان</h3>
+                <button type="button" id="sidebarCollapseInside" class="btn btn-outline-light btn-sm d-md-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li>
+                    <a asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-home me-2"></i> لوحة التحكم</a>
+                </li>
+                <li>
+                    <a asp-controller="Patients" asp-action="Index"><i class="fas fa-users me-2"></i> المرضى</a>
+                </li>
+                <li>
+                    <a asp-controller="Patients" asp-action="Create"><i class="fas fa-user-plus me-2"></i> إضافة مريض</a>
+                </li>
+                <li>
+                    <form asp-controller="Admin" asp-action="Logout" method="post" class="d-inline border-0 p-0 m-0">
+                        <button type="submit" class="btn btn-link text-start text-white text-decoration-none w-100" style="padding: 10px 20px; font-size: 1.1em;">
+                            <i class="fas fa-sign-out-alt me-2"></i> تسجيل الخروج
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                        <i class="fas fa-align-right"></i>
+                        <span>تبديل القائمة</span>
+                    </button>
+                    <div class="ms-auto fw-bold text-primary">
+                        لوحة تحكم الإدارة
+                    </div>
+                </div>
+            </nav>
+
+            <main role="main">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#sidebarCollapse, #sidebarCollapseInside').on('click', function () {
+                $('#sidebar').toggleClass('active');
+            });
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

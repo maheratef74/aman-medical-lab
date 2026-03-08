@@ -1,0 +1,33 @@
+@model DrMohamedWeb.Core.Entities.Patient
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "إضافة مريض جديد";
+}
+
+<div class="mb-4 border-bottom pb-2">
+    <h2 class="text-secondary"><i class="fas fa-user-plus me-2"></i>إضافة مريض جديد</h2>
+</div>
+
+<div class="card shadow-sm border-0" style="max-width: 600px;">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label fw-bold">اسم المريض</label>
+                <input asp-for="Name" class="form-control" required placeholder="أدخل اسم المريض بالكامل" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-4">
+                <label asp-for="PhoneNumber" class="form-label fw-bold">رقم الهاتف <small class="text-muted">(يستخدم لفتح النتائج)</small></label>
+                <input asp-for="PhoneNumber" class="form-control" required dir="ltr" placeholder="01xxxxxxxxx" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">إلغاء والعودة للقائمة</a>
+                <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> حفظ البيانات</button>
+            </div>
+        </form>
+    </div>
+</div>

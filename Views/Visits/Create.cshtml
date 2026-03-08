@@ -1,0 +1,35 @@
+@model DrMohamedWeb.Core.Entities.PatientVisit
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "إضافة زيارة جديدة";
+}
+
+<div class="mb-4 border-bottom pb-2">
+    <h2 class="text-secondary"><i class="fas fa-calendar-plus me-2"></i>إضافة زيارة جديدة للمريض</h2>
+</div>
+
+<div class="card shadow-sm border-0" style="max-width: 600px;">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <input type="hidden" asp-for="PatientId" />
+            
+            <div class="mb-3">
+                <label asp-for="VisitDate" class="form-label fw-bold">تاريخ الزيارة</label>
+                <input asp-for="VisitDate" type="date" class="form-control" required />
+                <span asp-validation-for="VisitDate" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-4">
+                <label asp-for="Notes" class="form-label fw-bold">ملاحظات الزيارة <small class="text-muted">(اختياري)</small></label>
+                <textarea asp-for="Notes" class="form-control" rows="4" placeholder="أدخل أي ملاحظات ترغب في تسجيلها بخصوص الزيارة أو التحاليل المطلوبة..."></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" asp-route-patientId="@Model.PatientId" class="btn btn-secondary">إلغاء والعودة للزيارات</a>
+                <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> تسجيل الزيارة</button>
+            </div>
+        </form>
+    </div>
+</div>
