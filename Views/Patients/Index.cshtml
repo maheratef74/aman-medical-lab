@@ -10,6 +10,29 @@
     <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus me-1"></i> إضافة مريض جديد</a>
 </div>
 
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row gx-3 gy-2 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" name="searchPhone" placeholder="بحث برقم الهاتف (مثال: 012...)" value="@ViewBag.SearchPhone" dir="ltr" />
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">بحث</button>
+            </div>
+            @if (!string.IsNullOrEmpty(ViewBag.SearchPhone as string))
+            {
+                <div class="col-auto">
+                    <a asp-action="Index" class="btn btn-outline-secondary">إلغاء البحث</a>
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+
 <div class="card shadow-sm border-0">
     <div class="card-body">
         <div class="table-responsive">

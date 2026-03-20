@@ -1,0 +1,187 @@
+@model DrMohamedWeb.ViewModels.PatientResultViewModel
+@{
+    Layout = null;
+}
+
+<style>
+    .result-container {
+        direction: rtl;
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: 'Tajawal', sans-serif;
+    }
+    .header-card {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        text-align: right;
+    }
+    .header-card h2 {
+        margin: 0 0 10px 0;
+        font-size: 24px;
+        font-weight: 700;
+    }
+    .header-card p {
+        margin: 5px 0;
+        color: #ecf0f1;
+        font-size: 16px;
+    }
+    .visit-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+        text-align: right;
+        border: 1px solid #eef2f5;
+    }
+    .visit-date {
+        color: #3498db;
+        font-weight: 700;
+        font-size: 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .test-item {
+        background: #f8f9fa;
+        border-left: 4px solid #3498db;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    .test-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    .btn-custom {
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        color: white;
+        transition: all 0.2s;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-view {
+        background: #2ecc71;
+    }
+    .btn-view:hover {
+        background: #27ae60;
+        transform: translateY(-2px);
+        color: white;
+    }
+    .btn-download {
+        background: #3498db;
+    }
+    .btn-download:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+        color: white;
+    }
+    .btn-all-visits {
+        display: block;
+        width: 100%;
+        padding: 18px;
+        background: white;
+        color: #2c3e50;
+        border: 2px solid #e0e6ed;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-all-visits:hover {
+        border-color: #3498db;
+        color: #3498db;
+        background: #f8fafc;
+    }
+    .empty-msg {
+        text-align: center;
+        color: #7f8c8d;
+        padding: 20px;
+        font-size: 18px;
+    }
+    @@media (max-width: 600px) {
+        .test-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .action-buttons {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        .btn-custom {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="result-container">
+    <div class="header-card">
+        <h2>@Model.PatientName</h2>
+        <p><i class="bi bi-telephone-fill me-2"></i>@Model.PhoneNumber</p>
+    </div>
+
+    @if (Model.LatestVisit != null)
+    {
+        <div class="visit-card">
+            <div class="visit-date">
+                <i class="bi bi-calendar-check me-2"></i>
+                زيارة بتاريخ: @Model.LatestVisit.VisitDate.ToString("yyyy/MM/dd")
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.LatestVisit.Notes))
+            {
+                <p style="color: #666; margin-bottom: 20px;">@Model.LatestVisit.Notes</p>
+            }
+
+            @if (Model.LatestVisit.TestResults.Any())
+            {
+                <div class="tests-list">
+                    @foreach (var test in Model.LatestVisit.TestResults)
+                    {
+                        <div class="test-item">
+                            <div class="test-name">@test.TestName</div>
+                            <div class="action-buttons">
+                                <a href="@Url.Content("~/" + test.FilePath.TrimStart('/'))" target="_blank" class="btn-custom btn-view">
+                                    <i class="bi bi-eye-fill me-1"></i> عرض
+                                </a>
+                                <a asp-action="Download" asp-controller="Result" asp-route-id="@test.Id" class="btn-custom btn-download">
+                                    <i class="bi bi-download me-1"></i> تحميل
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-msg">لا توجد تحاليل لهذه الزيارة</div>
+            }
+        </div>
+    }
+
+    <button type="button" id="loadAllVisitsBtn" data-phone="@Model.PhoneNumber" class="btn-all-visits border-0">
+        <i class="bi bi-clock-history me-2"></i> عرض الزيارات السابقة
+    </button>
+</div>

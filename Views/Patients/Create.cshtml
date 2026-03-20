@@ -26,8 +26,22 @@
 
             <div class="d-flex justify-content-between">
                 <a asp-action="Index" class="btn btn-secondary">إلغاء والعودة للقائمة</a>
-                <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i> حفظ البيانات</button>
+                <button type="submit" id="submitBtn" class="btn btn-success"><i class="fas fa-save me-1"></i> حفظ البيانات</button>
             </div>
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('form').on('submit', function () {
+                if ($(this).valid()) {
+                    var $btn = $('#submitBtn');
+                    $btn.prop('disabled', true);
+                    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> جاري الحفظ...');
+                }
+            });
+        });
+    </script>
+}

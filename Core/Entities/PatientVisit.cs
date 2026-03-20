@@ -9,6 +9,7 @@ namespace DrMohamedWeb.Core.Entities
         public int PatientId { get; set; }
         public DateTime VisitDate { get; set; } = DateTime.Today;
         public string? Notes { get; set; }
+        public bool IsAvailable { get; set; } = false;
 
         // Navigation properties
         public Patient? Patient { get; set; }

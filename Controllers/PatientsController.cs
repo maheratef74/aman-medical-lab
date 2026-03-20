@@ -17,11 +17,21 @@ namespace DrMohamedWeb.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchPhone)
         {
-            var patients = await _context.Patients
+            var query = _context.Patients.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchPhone))
+            {
+                query = query.Where(p => p.PhoneNumber.Contains(searchPhone));
+            }
+
+            var patients = await query
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
+
+            ViewBag.SearchPhone = searchPhone;
+
             return View(patients);
         }
 
@@ -43,6 +53,28 @@ namespace DrMohamedWeb.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(patient);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchByPhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                return Json(new { success = false, message = "رقم الهاتف غير صالح" });
+            }
+
+            var patients = await _context.Patients
+                .Where(p => p.PhoneNumber.Contains(phone))
+                .Take(10)
+                .Select(p => new { id = p.Id, name = p.Name, phone = p.PhoneNumber })
+                .ToListAsync();
+
+            if (patients.Count == 0)
+            {
+                return Json(new { success = false, message = "لم يتم العثور على مريض بهذا الرقم" });
+            }
+
+            return Json(new { success = true, patients = patients });
         }
     }
 }

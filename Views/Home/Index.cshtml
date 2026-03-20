@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "معمل أمان للتحاليل الطبية";
     Layout = null;
 }
@@ -94,24 +94,25 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-8">
-                <div class="hero-search-card">
+                <form id="searchForm" asp-controller="Result" asp-action="SearchByPhone" method="post" class="hero-search-card">
                     <label class="mb-2"><i class="bi bi-search me-1"></i> عرض آخر تحليل</label>
                     <p class="text-white-50 small mb-3">أدخل رقم هاتفك لعرض آخر نتيجة تحليل</p>
                     <div class="mb-3">
                         <input type="tel"
+                               name="phone"
                                id="phoneInput"
                                class="form-control hero-input text-center"
                                placeholder="01xxxxxxxxx"
                                dir="ltr"
-                               maxlength="11" />
+                               maxlength="11" required />
                     </div>
-                    <button class="btn btn-primary hero-btn" type="button" id="searchBtn">
+                    <button class="btn btn-primary hero-btn" type="submit" id="searchBtn">
                         <i class="bi bi-file-earmark-medical me-2"></i> عرض آخر تحليل
                     </button>
                     <p class="text-white-50 small text-center mt-2 mb-0">
                         <i class="bi bi-lock-fill me-1"></i>بياناتك آمنة ومحمية تماماً
                     </p>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -126,36 +127,10 @@
             <div class="section-line mx-auto"></div>
         </div>
 
-        <!-- PDF viewer card -->
         <div class="row justify-content-center">
             <div class="col-lg-9">
-                <div class="card border-0 rounded-4 shadow-sm p-4">
-
-                    <!-- Loading state -->
-                    <div id="pdfLoading" class="text-center py-5">
-                        <div class="spinner-border text-primary mb-3" role="status"></div>
-                        <p class="text-muted fw-bold">جاري تحميل نتيجة التحليل…</p>
-                    </div>
-
-                    <!-- Error state -->
-                    <div id="pdfError" class="text-center py-5" style="display:none">
-                        <i class="bi bi-exclamation-circle text-danger" style="font-size:3rem"></i>
-                        <p class="text-danger fw-bold mt-3">لا يوجد تحليل متاح حالياً، يرجى المحاولة لاحقاً.</p>
-                    </div>
-
-                    <!-- PDF pages rendered as images -->
-                    <div id="pdfPagesContainer" style="display:none">
-                        <div id="pdfPages" class="d-flex flex-column gap-3 align-items-center"></div>
-
-                        <!-- Download button -->
-                        <div class="d-flex justify-content-center mt-4">
-                            <a id="pdfDownloadBtn" href="/pdfs/latest.pdf" download
-                               class="btn btn-primary rounded-pill px-5 fw-bold">
-                                <i class="bi bi-file-earmark-pdf me-2"></i>تحميل PDF
-                            </a>
-                        </div>
-                    </div>
-
+                <div id="resultsContainer">
+                    <!-- AJAX content will be loaded here -->
                 </div>
             </div>
         </div>
@@ -458,63 +433,81 @@
         });
     });
 
-    // Search button – load and render PDF
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    document.getElementById('searchBtn').addEventListener('click', () => {
+    document.getElementById('searchForm').addEventListener('submit', function (e) {
+        e.preventDefault();
         const phone = document.getElementById('phoneInput').value.trim();
-        if (!phone || phone.length < 10) {
-            document.getElementById('phoneInput').classList.add('is-invalid');
-            return;
-        }
-        document.getElementById('phoneInput').classList.remove('is-invalid');
-        document.getElementById('resultPhone').textContent = phone;
-
         const resultsSection = document.getElementById('resultsSection');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const phoneDisplay = document.getElementById('resultPhone');
+        
+        if (!phone) return;
+        
+        phoneDisplay.textContent = phone;
         resultsSection.style.display = 'block';
+        resultsContainer.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted fw-bold">جاري البحث...</p></div>';
+        
         resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        // Reset viewer state
-        document.getElementById('pdfLoading').style.display = 'block';
-        document.getElementById('pdfError').style.display = 'none';
-        document.getElementById('pdfPagesContainer').style.display = 'none';
-        document.getElementById('pdfPages').innerHTML = '';
+        fetch('@Url.Action("SearchByPhoneAjax", "Result")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({ phone: phone })
+        })
+        .then(response => {
+            if (!response.ok && response.status !== 400 && response.status !== 404) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(html => {
+            resultsContainer.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultsContainer.innerHTML = '<div class="alert alert-danger text-center">حدث خطأ أثناء محاولة الاتصال بالخادم. يرجى المحاولة لاحقاً.</div>';
+        });
+    });
 
-        // Load PDF from server
-        const pdfUrl = '/pdfs/latest.pdf?t=' + Date.now(); // cache-bust
-        pdfjsLib.getDocument(pdfUrl).promise
-            .then(pdf => {
-                document.getElementById('pdfLoading').style.display = 'none';
-                document.getElementById('pdfPagesContainer').style.display = 'block';
-
-                const container = document.getElementById('pdfPages');
-                const totalPages = pdf.numPages;
-
-                // Render each page as a canvas
-                const renderPage = (pageNum) => {
-                    pdf.getPage(pageNum).then(page => {
-                        const scale = window.innerWidth < 600 ? 1.2 : 2.0;
-                        const viewport = page.getViewport({ scale });
-
-                        const canvas = document.createElement('canvas');
-                        canvas.width  = viewport.width;
-                        canvas.height = viewport.height;
-                        canvas.style.width  = '100%';
-                        canvas.style.borderRadius = '12px';
-                        canvas.style.boxShadow = '0 4px 18px rgba(0,0,0,.12)';
-
-                        container.appendChild(canvas);
-                        page.render({ canvasContext: canvas.getContext('2d'), viewport });
-                    });
-                };
-
-                for (let i = 1; i <= totalPages; i++) renderPage(i);
+    document.addEventListener('click', function(e) {
+        // Handle "عرض الزيارات السابقة" (Show All Visits)
+        const allVisitsBtn = e.target.closest('#loadAllVisitsBtn');
+        if (allVisitsBtn) {
+            e.preventDefault();
+            const phone = allVisitsBtn.getAttribute('data-phone');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            resultsContainer.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted fw-bold">جاري تحميل الزيارات السابقة...</p></div>';
+            
+            fetch('@Url.Action("GetAllVisitsAjax", "Result")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ phone: phone })
             })
-            .catch(() => {
-                document.getElementById('pdfLoading').style.display = 'none';
-                document.getElementById('pdfError').style.display = 'block';
-            });
+            .then(res => res.text())
+            .then(html => resultsContainer.innerHTML = html)
+            .catch(err => resultsContainer.innerHTML = '<div class="alert alert-danger text-center">حدث خطأ أثناء تحميل الزيارات السابقة.</div>');
+        }
+
+        // Handle "العودة لآخر تحليل" (Back to Latest Result)
+        const latestResultBtn = e.target.closest('#loadLatestResultBtn');
+        if (latestResultBtn) {
+            e.preventDefault();
+            const phone = latestResultBtn.getAttribute('data-phone');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            resultsContainer.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted fw-bold">جاري الرجوع لآخر تحليل...</p></div>';
+            
+            fetch('@Url.Action("SearchByPhoneAjax", "Result")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ phone: phone })
+            })
+            .then(res => res.text())
+            .then(html => resultsContainer.innerHTML = html)
+            .catch(err => resultsContainer.innerHTML = '<div class="alert alert-danger text-center">حدث خطأ أثناء الرجوع لآخر تحليل.</div>');
+        }
     });
 </script>
 </body>

@@ -1,0 +1,191 @@
+@model DrMohamedWeb.ViewModels.AddVisitByPhoneViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "إضافة زيارة ونتائج برقم الهاتف";
+}
+
+<style>
+    .autocomplete-items {
+        position: absolute;
+        border: 1px solid #d4d4d4;
+        border-bottom: none;
+        border-top: none;
+        z-index: 99;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .autocomplete-items div {
+        padding: 10px;
+        cursor: pointer;
+        background-color: #fff;
+        border-bottom: 1px solid #d4d4d4;
+    }
+    .autocomplete-items div:hover {
+        background-color: #e9e9e9;
+    }
+    .position-relative-container {
+        position: relative;
+    }
+</style>
+
+<div class="mb-4 border-bottom pb-2">
+    <h2 class="text-secondary"><i class="fas fa-file-medical me-2"></i>إضافة زيارة ونتائج برقم الهاتف</h2>
+</div>
+
+<div class="card shadow-sm border-0" style="max-width: 700px;">
+    <div class="card-body">
+        <form asp-action="AddByPhone" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <label asp-for="PhoneNumber" class="form-label fw-bold"></label>
+                    <div class="input-group position-relative-container">
+                        <input asp-for="PhoneNumber" class="form-control" dir="ltr" id="phoneNumberInput" placeholder="01xxxxxxxxx" autocomplete="off" />
+                        <span class="input-group-text d-none" id="searchSpinner">
+                            <i class="fas fa-spinner fa-spin text-primary"></i>
+                        </span>
+                        <div id="autocomplete-list" class="autocomplete-items w-100"></div>
+                    </div>
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <div id="patientSearchResult" class="w-100 p-2 text-center rounded" style="display: none; background-color: #f8f9fa;">
+                        <!-- Results will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <hr class="text-muted" />
+
+            <h5 class="mt-4 mb-3 text-primary"><i class="fas fa-calendar-alt me-2"></i>تفاصيل الزيارة والنتيجة</h5>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="VisitDate" class="form-label fw-bold"></label>
+                    <input asp-for="VisitDate" type="date" class="form-control" />
+                    <span asp-validation-for="VisitDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="TestName" class="form-label fw-bold"></label>
+                    <input asp-for="TestName" class="form-control" placeholder="مثال: صورة دم كاملة CBC" />
+                    <span asp-validation-for="TestName" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Notes" class="form-label fw-bold"></label>
+                <textarea asp-for="Notes" class="form-control" rows="2" placeholder="ملاحظات إضافية (اختياري)"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4 form-check">
+                <input asp-for="IsAvailable" class="form-check-input" type="checkbox" />
+                <label asp-for="IsAvailable" class="form-check-label fw-bold"></label>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Files" class="form-label fw-bold"></label>
+                <input asp-for="Files" type="file" class="form-control" accept=".pdf" multiple />
+                <span asp-validation-for="Files" class="text-danger"></span>
+                <small class="text-muted d-block mt-1">تنسيق PDF فقط. يمكنك اختيار أكثر من ملف.</small>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-controller="Visits" asp-action="Index" asp-route-patientId="" class="btn btn-secondary disabled" id="cancelBtn">إلغاء والعودة لزيارات المريض</a>
+                <button type="submit" class="btn btn-success" id="submitBtn" disabled><i class="fas fa-save me-1"></i> حفظ الزيارة والنتائج</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            var $phoneInput = $('#phoneNumberInput');
+            var $resultDiv = $('#patientSearchResult');
+            var $submitBtn = $('#submitBtn');
+            var $cancelBtn = $('#cancelBtn');
+            var $autocompleteList = $('#autocomplete-list');
+            var $searchSpinner = $('#searchSpinner');
+            var searchTimeout;
+
+            function clearSelection() {
+                $resultDiv.hide().empty();
+                $submitBtn.prop('disabled', true);
+                $cancelBtn.addClass('disabled').attr('href', '#');
+            }
+
+            $phoneInput.on('input', function () {
+                var phone = $(this).val();
+                $autocompleteList.empty();
+                clearSelection();
+
+                if (!phone) {
+                    $searchSpinner.addClass('d-none');
+                    return;
+                }
+
+                clearTimeout(searchTimeout);
+                $searchSpinner.removeClass('d-none');
+
+                searchTimeout = setTimeout(function () {
+                    $.ajax({
+                        url: '@Url.Action("SearchByPhone", "Patients")',
+                        type: 'GET',
+                        data: { phone: phone },
+                        success: function (response) {
+                            $searchSpinner.addClass('d-none');
+                            $autocompleteList.empty();
+
+                            if (response.success && response.patients.length > 0) {
+                                $.each(response.patients, function (index, p) {
+                                    var item = $('<div>')
+                                        .html("<strong>" + p.phone + "</strong> - " + p.name)
+                                        .on('click', function () {
+                                            // Select patient
+                                            $phoneInput.val(p.phone);
+                                            $autocompleteList.empty();
+                                            
+                                            $resultDiv.html('<span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i> ' + p.name + '</span>').show();
+                                            $submitBtn.prop('disabled', false);
+                                            
+                                            var url = '@Url.Action("Index", "Visits")' + '?patientId=' + p.id;
+                                            $cancelBtn.attr('href', url).removeClass('disabled');
+                                        });
+                                    $autocompleteList.append(item);
+                                });
+                            } else if (!response.success && phone.length >= 3) {
+                                // Show message only if they typed a few characters and nothing matched
+                                var noResult = $('<div>').addClass('text-muted text-center').text('لا يوجد مرضى بهذا الرقم');
+                                $autocompleteList.append(noResult);
+                            }
+                        },
+                        error: function () {
+                            $searchSpinner.addClass('d-none');
+                        }
+                    });
+                }, 300); // 300ms debounce
+            });
+
+            // Close the autocomplete list if the user clicks outside of it
+            $(document).on("click", function (e) {
+                if (!$(e.target).closest(".position-relative-container").length) {
+                    $autocompleteList.empty();
+                }
+            });
+
+            $('form').on('submit', function () {
+                if ($(this).valid() && !$submitBtn.prop('disabled')) {
+                    $submitBtn.prop('disabled', true);
+                    $submitBtn.html('<i class="fas fa-spinner fa-spin me-1"></i> جاري الحفظ...');
+                }
+            });
+        });
+    </script>
+}

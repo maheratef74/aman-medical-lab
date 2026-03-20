@@ -1,0 +1,76 @@
+@{
+    ViewData["Title"] = "البحث عن التحاليل";
+}
+
+<style>
+    .search-container {
+        direction: rtl;
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 30px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .search-container h2 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 25px;
+    }
+    .modern-input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e0e6ed;
+        border-radius: 12px;
+        font-size: 18px;
+        transition: all 0.3s ease;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .modern-input:focus {
+        border-color: #3498db;
+        outline: none;
+        box-shadow: 0 0 10px rgba(52,152,219,0.2);
+    }
+    .btn-search {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-search:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52,152,219,0.4);
+    }
+    .error-msg {
+        color: #e74c3c;
+        background: #fadeea;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="search-container">
+    <h2>نتائج التحاليل</h2>
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="error-msg">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form asp-action="SearchByPhone" asp-controller="Result" method="post">
+        <input type="tel" name="phone" class="modern-input" placeholder="أدخل رقم الهاتف" required />
+        <button type="submit" class="btn-search">عرض آخر تحليل</button>
+    </form>
+</div>
