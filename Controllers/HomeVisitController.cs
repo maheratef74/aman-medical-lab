@@ -51,10 +51,8 @@ namespace DrMohamedWeb.Controllers
                         await image.CopyToAsync(stream);
                     }
 
-                    // Construct public URL
-                    var request = HttpContext.Request;
-                    string baseUrl = $"{request.Scheme}://{request.Host.Value}";
-                    imageUrl = $"{baseUrl}/uploads/{year}/{month}/{fileName}";
+                    // Return clean relative URL
+                    imageUrl = $"/uploads/{year}/{month}/{fileName}";
                 }
 
                 return Ok(new { success = true, imageUrl });

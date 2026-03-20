@@ -168,7 +168,7 @@
 
                         <div class="mb-4">
                             <label for="userAddress" class="form-label" style="font-weight: 700; color: #2c3e50; font-size: 0.95rem;">العنوان بالتفصيل <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="userAddress" rows="3" placeholder="المحافظة، المنطقة، الشارع، رقم العمارة، الدور" required style="border-radius: 12px; padding: 14px 15px; font-size: 1rem; border: 1px solid #dee2e6;"></textarea>
+                            <textarea class="form-control" id="userAddress" rows="3" placeholder="أدخل عنوانك بالتفصيل" required style="border-radius: 12px; padding: 14px 15px; font-size: 1rem; border: 1px solid #dee2e6;"></textarea>
                             <div class="invalid-feedback" style="font-size: 0.85rem; font-weight: 600;">الرجاء إدخال العنوان بالتفصيل.</div>
                         </div>
 
@@ -659,7 +659,7 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        uploadedImageUrl = result.imageUrl;
+                        uploadedImageUrl = new URL(result.imageUrl, window.location.origin).href;
                     } else {
                         throw new Error(result.message || 'فشل في رفع الصورة');
                     }
