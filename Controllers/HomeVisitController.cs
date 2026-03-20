@@ -31,10 +31,10 @@ namespace DrMohamedWeb.Controllers
                         return BadRequest(new { success = false, message = "Only JPG and PNG images are allowed." });
                     }
 
-                    // Create directory structure: wwwroot/uploads/{year}/{month}/
+                    // Use ContentRootPath to avoid double wwwroot issue
                     string year = DateTime.Now.Year.ToString();
                     string month = DateTime.Now.Month.ToString("00");
-                    string uploadFolder = Path.Combine(_env.WebRootPath, "uploads", year, month);
+                    string uploadFolder = Path.Combine(_env.ContentRootPath, "wwwroot", "uploads", year, month);
 
                     if (!Directory.Exists(uploadFolder))
                     {
@@ -51,8 +51,8 @@ namespace DrMohamedWeb.Controllers
                         await image.CopyToAsync(stream);
                     }
 
-                    // Return clean relative URL
-                    imageUrl = $"/uploads/{year}/{month}/{fileName}";
+                    // Return relative URL that maps to our GetImage action
+                    imageUrl = $"/api/HomeVisit/Image/{year}/{month}/{fileName}";
                 }
 
                 return Ok(new { success = true, imageUrl });
@@ -61,6 +61,29 @@ namespace DrMohamedWeb.Controllers
             {
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
+        }
+
+        [HttpGet("Image/{year}/{month}/{fileName}")]
+        public IActionResult GetImage(string year, string month, string fileName)
+        {
+            // Sanitize inputs
+            if (string.IsNullOrWhiteSpace(year) || string.IsNullOrWhiteSpace(month) || string.IsNullOrWhiteSpace(fileName))
+                return NotFound();
+
+            string filePath = Path.Combine(_env.ContentRootPath, "wwwroot", "uploads", year, month, fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            string ext = Path.GetExtension(fileName).ToLowerInvariant();
+            string contentType = ext switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                _ => "application/octet-stream"
+            };
+
+            return PhysicalFile(filePath, contentType);
         }
     }
 }
