@@ -1,0 +1,315 @@
+@{
+    ViewData["Title"] = "طلب زيارة منزلية";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>طلب زيارة منزلية - معمل أمان</title>
+    <!-- Google Fonts (Cairo) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Cairo', sans-serif;
+            color: #1e293b;
+        }
+        .navbar-brand-custom {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #0d6efd !important;
+            text-decoration: none;
+        }
+        .navbar-brand-custom span { color: #198754; }
+        .visit-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 30px;
+            margin-top: 40px;
+            margin-bottom: 50px;
+            border: 1px solid #eef2f5;
+        }
+        .visit-header { text-align: center; margin-bottom: 30px; }
+        .visit-header i { font-size: 3.5rem; color: #0d6efd; margin-bottom: 10px; display: block; }
+        .visit-header h2 { font-weight: 800; color: #0d2958; font-size: 1.8rem;}
+        .visit-header p { color: #64748b; font-size: 0.95rem; }
+        .form-control, .form-select, textarea {
+            border-radius: 12px;
+            padding: 14px 15px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        .form-control:focus, .form-select:focus, textarea:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        }
+        .form-label { font-weight: 700; color: #2c3e50; margin-bottom: 8px; font-size: 0.95rem; }
+        .btn-submit {
+            background: #25D366;
+            border: none;
+            padding: 16px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-radius: 12px;
+            width: 100%;
+            color: white;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-submit:hover { background: #1da851; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37,211,102,0.3); }
+        .image-preview-container {
+            display: none;
+            margin-top: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px dashed #0d6efd;
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+        .image-preview-container img { max-width: 100%; max-height: 250px; border-radius: 8px; object-fit: contain; }
+        .invalid-feedback { font-size: 0.85rem; font-weight: 600; }
+        .file-upload-wrapper { position: relative; }
+        .file-upload-input {
+            position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; top: 0; left: 0;
+        }
+        .file-upload-display {
+            background: #fff; border: 2px dashed #ced4da; border-radius: 12px; padding: 25px 20px;
+            text-align: center; transition: all 0.3s ease; cursor: pointer;
+        }
+        .file-upload-wrapper:hover .file-upload-display { border-color: #0d6efd; background: #f0f7ff; }
+        .file-upload-display i { font-size: 2.5rem; color: #0d6efd; margin-bottom: 10px; display: block;}
+        .file-upload-display div { font-weight: 700; color: #2c3e50; }
+        .home-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            background: white;
+            color: #0d2958;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .home-link:hover { color: #0d6efd; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="@Url.Action("Index", "Home")" class="home-link">
+        <i class="bi bi-arrow-right me-2"></i> العودة للرئيسية
+    </a>
+</div>
+
+<div class="container" dir="rtl">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="visit-card">
+                <div class="visit-header">
+                    <i class="bi bi-house-heart"></i>
+                    <h2>طلب زيارة منزلية</h2>
+                    <p>احجز زيارة منزلية لسحب العينات بكل سهولة وأمان</p>
+                </div>
+                
+                <form id="homeVisitForm" novalidate>
+                    <div class="mb-4">
+                        <label for="userName" class="form-label">الاسم رباعي <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="userName" placeholder="أدخل اسمك بالكامل" required>
+                        <div class="invalid-feedback">الرجاء إدخال الاسم.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="userPhone" class="form-label">رقم الهاتف <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="userPhone" placeholder="01xxxxxxxxx" dir="ltr" text-align="right" required>
+                        <div class="invalid-feedback">الرجاء إدخال رقم هاتف صحيح.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="userAddress" class="form-label">العنوان بالتفصيل <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="userAddress" rows="3" placeholder="المحافظة، المنطقة، الشارع، رقم العمارة، الدور" required></textarea>
+                        <div class="invalid-feedback">الرجاء إدخال العنوان بالتفصيل.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">صورة التحليل المطلوبة أو الروشتة (اختياري)</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="userImage" class="file-upload-input" accept="image/png, image/jpeg, image/jpg">
+                            <div class="file-upload-display">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                                <div>اضغط هنا لاختيار صورة</div>
+                                <small class="text-muted">JPG, PNG (الحد الأقصى 5 ميجابايت)</small>
+                            </div>
+                        </div>
+                        <div id="imagePreviewContainer" class="image-preview-container">
+                            <img id="imagePreview" src="#" alt="Preview">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info text-center" role="alert" style="border-radius: 12px; font-weight: 600;">
+                        <i class="bi bi-info-circle-fill me-2"></i> سيتم تأكيد الطلب من خلال التواصل معكم
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <i class="bi bi-whatsapp"></i>
+                        <span>طلب زيارة منزلية</span>
+                    </button>
+                    
+                    <div id="successMsg" class="alert alert-success mt-3 text-center" style="display: none; border-radius: 12px; font-weight: 600;">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        جاري تحويلك إلى واتساب...
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('homeVisitForm');
+            const nameInput = document.getElementById('userName');
+            const phoneInput = document.getElementById('userPhone');
+            const addressInput = document.getElementById('userAddress');
+            const imageInput = document.getElementById('userImage');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const submitBtn = document.getElementById('submitBtn');
+            const successMsg = document.getElementById('successMsg');
+            let hasImage = false;
+
+            // Load from LocalStorage
+            if (localStorage.getItem('user_name')) nameInput.value = localStorage.getItem('user_name');
+            if (localStorage.getItem('user_phone')) phoneInput.value = localStorage.getItem('user_phone');
+            if (localStorage.getItem('user_address')) addressInput.value = localStorage.getItem('user_address');
+
+            // Image Preview Logic
+            imageInput.addEventListener('change', function () {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                        document.querySelector('.file-upload-display div').textContent = file.name;
+                    }
+                    reader.readAsDataURL(file);
+                    hasImage = true;
+                } else {
+                    previewContainer.style.display = 'none';
+                    document.querySelector('.file-upload-display div').textContent = 'اضغط هنا لاختيار صورة';
+                    hasImage = false;
+                }
+            });
+
+            // Form Submit Logic
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                
+                // Simple Validation
+                let isValid = true;
+                
+                [nameInput, phoneInput, addressInput].forEach(input => {
+                    if (!input.value.trim()) {
+                        input.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        input.classList.remove('is-invalid');
+                        input.classList.add('is-valid');
+                    }
+                });
+
+                if (!isValid) return;
+
+                // Save to LocalStorage
+                localStorage.setItem('user_name', nameInput.value.trim());
+                localStorage.setItem('user_phone', phoneInput.value.trim());
+                localStorage.setItem('user_address', addressInput.value.trim());
+
+                submitBtn.disabled = true;
+                submitBtn.style.display = 'none';
+                successMsg.style.display = 'block';
+
+                let uploadedImageUrl = '';
+
+                if (hasImage && imageInput.files[0]) {
+                    const formData = new FormData();
+                    formData.append('image', imageInput.files[0]);
+
+                    try {
+                        successMsg.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> جاري رفع الصورة...';
+                        
+                        const response = await fetch('/api/HomeVisit/UploadRequest', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            uploadedImageUrl = result.imageUrl;
+                        } else {
+                            throw new Error(result.message || 'فشل في رفع الصورة');
+                        }
+                    } catch (error) {
+                        console.error('Upload Error:', error);
+                        alert('حدث خطأ أثناء رفع الصورة. سيتم إرسال الطلب بدون المرفقات أو حاول مجدداً.');
+                    }
+                }
+
+                // Prepare WhatsApp Message
+                const name = nameInput.value.trim();
+                const phone = phoneInput.value.trim();
+                const address = addressInput.value.trim();
+                
+                let message = `طلب زيارة منزلية\n\nالاسم: ${name}\nرقم الهاتف: ${phone}\nالعنوان: ${address}`;
+                
+                if (uploadedImageUrl) {
+                    message += `\n\nصورة التحليل:\n${uploadedImageUrl}`;
+                }
+
+
+                const encodedMessage = encodeURIComponent(message);
+                const whatsappUrl = `https://wa.me/201143041240?text=${encodedMessage}`;
+
+                // UI Loading State (WhatsApp Redirect)
+                successMsg.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> جاري تحويلك إلى واتساب...';
+
+                // Redirect to WhatsApp after short delay for UX
+                setTimeout(() => {
+                    window.location.href = whatsappUrl;
+                    
+                    // Reset UI after 3 seconds in case they come back
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.style.display = 'flex';
+                        successMsg.style.display = 'none';
+                        successMsg.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> جاري تحويلك إلى واتساب...';
+                    }, 3000);
+                }, 800);
+            });
+
+            // Remove validation styling on input
+            [nameInput, phoneInput, addressInput].forEach(input => {
+                input.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
