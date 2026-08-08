@@ -20,12 +20,19 @@ body {
 .navbar-brand-custom {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #0d6efd !important;
+    color: #d5212a !important;
     letter-spacing: .02em;
 }
 
 .navbar-brand-custom span {
     color: #198754
+}
+
+.navbar-brand-custom img {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    object-fit: cover;
 }
 
 .nav-link-custom {
@@ -38,15 +45,15 @@ body {
 
 .nav-link-custom:hover,
 .nav-link-custom.active {
-    color: #0d6efd !important;
-    background: rgba(13, 110, 253, .08);
+    color: #d5212a !important;
+    background: rgba(213, 33, 42, .08);
 }
 
 #mainNav {
     background: #ffffffee;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 2px 16px rgba(13, 110, 253, .08);
+    box-shadow: 0 2px 16px rgba(213, 33, 42, .08);
     transition: all .3s;
 }
 
@@ -54,7 +61,7 @@ body {
 #hero {
     min-height: 100vh;
     background:
-        linear-gradient(rgba(2, 34, 90, .35), rgba(8, 60, 140, .35)),
+        linear-gradient(rgba(90, 8, 8, .38), rgba(150, 16, 16, .38)),
         url('https://www.shorouknews.com/uploadedimages/Sections/Egypt/original/kR0RyAv4sy-1.jpg') center center / cover no-repeat;
     background-attachment: scroll;
     display: flex;
@@ -66,7 +73,7 @@ body {
     #hero {
         min-height: 100svh;
         background:
-            linear-gradient(rgba(2, 34, 90, .35), rgba(8, 60, 140, .35)),
+            linear-gradient(rgba(90, 8, 8, .38), rgba(150, 16, 16, .38)),
             url('https://www.shorouknews.com/uploadedimages/Sections/Egypt/original/kR0RyAv4sy-1.jpg') center center / cover no-repeat;
         background-size: cover;
         background-attachment: scroll;
@@ -126,7 +133,7 @@ body {
 }
 
 .hero-input:focus {
-    border-color: #0d6efd;
+    border-color: #d5212a;
     box-shadow: none
 }
 
@@ -136,13 +143,13 @@ body {
     font-family: 'Cairo', sans-serif;
     font-weight: 700;
     font-size: 1rem;
-    background: #0d6efd;
+    background: #d5212a;
     border: none;
     width: 100%;
 }
 
 .hero-btn:hover {
-    background: #0b5ed7;
+    background: #b91d31;
     transform: translateY(-1px)
 }
 
@@ -157,8 +164,8 @@ section {
     font-weight: 700;
     letter-spacing: .12em;
     text-transform: uppercase;
-    background: rgba(13, 110, 253, .1);
-    color: #0d6efd;
+    background: rgba(213, 33, 42, .1);
+    color: #d5212a;
     padding: .3rem .9rem;
     border-radius: 50px;
     margin-bottom: .75rem;
@@ -167,20 +174,20 @@ section {
 .section-title {
     font-size: clamp(1.6rem, 3.5vw, 2.5rem);
     font-weight: 800;
-    color: #0d2958;
+    color: #7f1d1d;
 }
 
 .section-line {
     width: 60px;
     height: 4px;
-    background: linear-gradient(to left, #0d6efd, #38bdf8);
+    background: linear-gradient(to left, #d5212a, #198754);
     border-radius: 4px;
     margin: .75rem auto 0;
 }
 
 /* ───────────────────────── About ───────────────────────── */
 #about {
-    background: #f0f7ff
+    background: #fef2f2
 }
 
 .about-stat {
@@ -188,13 +195,13 @@ section {
     border-radius: 16px;
     padding: 1.25rem;
     text-align: center;
-    box-shadow: 0 4px 18px rgba(13, 110, 253, .07);
+    box-shadow: 0 4px 18px rgba(213, 33, 42, .07);
 }
 
 .about-stat .num {
     font-size: 2rem;
     font-weight: 900;
-    color: #0d6efd
+    color: #d5212a
 }
 
 .about-stat .lbl {
@@ -209,40 +216,40 @@ section {
     border-radius: 20px;
     padding: 2rem 1.5rem;
     text-align: center;
-    box-shadow: 0 4px 24px rgba(13, 110, 253, .07);
-    border: 1px solid #e2eeff;
+    box-shadow: 0 4px 24px rgba(213, 33, 42, .07);
+    border: 1px solid #fecaca;
     transition: all .3s;
     height: 100%;
 }
 
 .service-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 36px rgba(13, 110, 253, .15);
-    border-color: #0d6efd;
+    box-shadow: 0 12px 36px rgba(213, 33, 42, .15);
+    border-color: #d5212a;
 }
 
 .service-icon {
     width: 70px;
     height: 70px;
     border-radius: 18px;
-    background: linear-gradient(135deg, #dbeafe, #eff6ff);
+    background: linear-gradient(135deg, #fee2e2, #fef2f2);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1.1rem;
     font-size: 1.9rem;
-    color: #0d6efd;
+    color: #d5212a;
     transition: all .3s;
 }
 
 .service-card:hover .service-icon {
-    background: linear-gradient(135deg, #0d6efd, #38bdf8);
+    background: linear-gradient(135deg, #d5212a, #198754);
     color: #fff;
 }
 
 .service-card h5 {
     font-weight: 800;
-    color: #0d2958;
+    color: #7f1d1d;
     margin-bottom: .5rem;
     font-size: 1.05rem
 }
@@ -256,7 +263,7 @@ section {
 
 /* ───────────────────────── How It Works ───────────────────────── */
 #howItWorks {
-    background: #f0f7ff
+    background: #fef2f2
 }
 
 .step-card {
@@ -264,7 +271,7 @@ section {
     border-radius: 20px;
     padding: 2rem 1.5rem;
     text-align: center;
-    box-shadow: 0 4px 20px rgba(13, 110, 253, .07);
+    box-shadow: 0 4px 20px rgba(213, 33, 42, .07);
     position: relative;
 }
 
@@ -276,25 +283,25 @@ section {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: #0d6efd;
+    background: #d5212a;
     color: #fff;
     font-weight: 900;
     font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 14px rgba(13, 110, 253, .35);
+    box-shadow: 0 4px 14px rgba(213, 33, 42, .35);
 }
 
 .step-icon {
     font-size: 2.6rem;
-    color: #0d6efd;
+    color: #d5212a;
     margin-bottom: .85rem;
 }
 
 .step-card h5 {
     font-weight: 800;
-    color: #0d2958;
+    color: #7f1d1d;
     font-size: 1rem;
     margin-bottom: .4rem
 }
@@ -314,8 +321,8 @@ section {
     padding: 1.25rem;
     background: #fff;
     border-radius: 16px;
-    box-shadow: 0 4px 18px rgba(13, 110, 253, .06);
-    border: 1px solid #e2eeff;
+    box-shadow: 0 4px 18px rgba(213, 33, 42, .06);
+    border: 1px solid #fecaca;
 }
 
 .contact-icon-wrap {
@@ -323,17 +330,17 @@ section {
     height: 50px;
     min-width: 50px;
     border-radius: 14px;
-    background: linear-gradient(135deg, #dbeafe, #eff6ff);
+    background: linear-gradient(135deg, #fee2e2, #fef2f2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.4rem;
-    color: #0d6efd;
+    color: #d5212a;
 }
 
 .contact-item h6 {
     font-weight: 800;
-    color: #0d2958;
+    color: #7f1d1d;
     margin-bottom: .2rem;
     font-size: .95rem
 }
@@ -348,13 +355,13 @@ section {
 .contact-map {
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 4px 24px rgba(13, 110, 253, .1);
-    border: 2px solid #e2eeff;
+    box-shadow: 0 4px 24px rgba(213, 33, 42, .1);
+    border: 2px solid #fecaca;
 }
 
 /* ───────────────────────── Footer ───────────────────────── */
 footer {
-    background: linear-gradient(135deg, #0d2958, #0d6efd);
+    background: linear-gradient(135deg, #7f1d1d, #d5212a);
     color: rgba(255, 255, 255, .85);
     padding: 2rem 0;
     font-size: .9rem;
@@ -419,6 +426,145 @@ footer a:hover {
     100% {
         transform: scale(1.4);
         opacity: 0
+    }
+}
+
+/* ───────────────────────── Brand overrides (Bootstrap classes) ───────────────────────── */
+.text-primary {
+    color: #d5212a !important
+}
+
+.btn-primary {
+    background-color: #d5212a;
+    border-color: #d5212a;
+    box-shadow: none;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary:disabled {
+    background-color: #b91d31;
+    border-color: #b91d31;
+}
+
+.btn-outline-primary {
+    color: #d5212a;
+    border-color: #d5212a
+}
+
+.btn-outline-primary:hover {
+    background-color: #d5212a;
+    border-color: #d5212a;
+    color: #fff
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea:focus {
+    border-color: #d5212a;
+    box-shadow: 0 0 0 4px rgba(213, 33, 42, .1)
+}
+
+.footer-badge {
+    background: rgba(213, 33, 42, .1)
+}
+
+/* ───────────────────────── PWA Install Card ───────────────────────── */
+.pwa-install-card {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    max-width: 460px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, .24);
+    border: 1px solid #fecaca;
+    padding: 16px 18px;
+    gap: 14px;
+    align-items: center;
+    z-index: 10001;
+    transform: translateY(24px);
+    transition: transform .3s ease, opacity .3s ease;
+}
+
+.pwa-install-card .pwa-logo {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    border-radius: 14px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(213, 33, 42, .25);
+}
+
+.pwa-install-card .pwa-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.pwa-install-card .pwa-title {
+    font-weight: 800;
+    color: #7f1d1d;
+    font-size: .95rem;
+}
+
+.pwa-install-card .pwa-desc {
+    color: #64748b;
+    font-size: .78rem;
+    line-height: 1.5;
+}
+
+.pwa-install-btn {
+    background: linear-gradient(135deg, #d5212a, #b91d31);
+    border: none;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: .85rem;
+    white-space: nowrap;
+    transition: all .25s;
+}
+
+.pwa-install-btn:hover {
+    background: linear-gradient(135deg, #b91d31, #7f1d1d);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.pwa-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    border: none;
+    background: rgba(213, 33, 42, .08);
+    color: #d5212a;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.pwa-close:hover {
+    background: #d5212a;
+    color: #fff;
+}
+
+@media(max-width:576px) {
+    .pwa-install-card {
+        bottom: 96px;
+        flex-wrap: wrap;
+        padding: 14px;
+    }
+
+    .pwa-install-btn {
+        width: 100%;
     }
 }
 

@@ -1,0 +1,533 @@
+@model DrMohamedWeb.ViewModels.AddVisitViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "إضافة مريض / زيارة ونتائج";
+}
+
+<style>
+    .wizard-card {
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 6px 24px rgba(15, 23, 42, .08);
+        border: 1px solid #eef2f5;
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    /* Stepper */
+    .stepper {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        padding-top: 8px;
+    }
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 110px;
+        position: relative;
+        text-align: center;
+        gap: 8px;
+    }
+    .step-item:not(:first-child)::before {
+        content: '';
+        position: absolute;
+        top: 21px;
+        right: calc(100% - 6px);
+        width: calc(100% - 78px);
+        height: 3px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        transition: background .3s;
+    }
+    .step-item.done::before { background: #198754; }
+    .step-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        color: #94a3b8;
+        font-weight: 800;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2.5px solid #e2e8f0;
+        transition: all .3s;
+        z-index: 1;
+    }
+    .step-item.active .step-circle {
+        background: #d5212a;
+        border-color: #d5212a;
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(213, 33, 42, .35);
+    }
+    .step-item.done .step-circle {
+        background: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+    .step-label {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #94a3b8;
+    }
+    .step-item.active .step-label { color: #d5212a; }
+    .step-item.done .step-label { color: #198754; }
+
+    /* Panels */
+    .step-panel { display: none; animation: fadeStep .35s ease; }
+    .step-panel.active { display: block; }
+    @@keyframes fadeStep {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-label { font-weight: 700; color: #334155; font-size: .92rem; }
+    .form-control, .form-select {
+        border-radius: 12px;
+        padding: 12px 14px;
+        border: 1.5px solid #e2e8f0;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #d5212a;
+        box-shadow: 0 0 0 4px rgba(213, 33, 42, .1);
+    }
+
+    /* Patient found chip */
+    #patientFoundChip {
+        display: none;
+        background: rgba(25, 135, 84, .08);
+        border: 1.5px dashed #198754;
+        color: #14532d;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-weight: 700;
+        margin-top: 12px;
+    }
+
+    /* Dropzone */
+    .drop-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 34px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all .25s;
+        background: #f8fafc;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+        border-color: #d5212a;
+        background: rgba(213, 33, 42, .04);
+    }
+    .drop-zone i { font-size: 2.4rem; color: #d5212a; display: block; margin-bottom: 10px; }
+    .drop-zone .dz-title { font-weight: 800; color: #334155; }
+    .drop-zone .dz-sub { color: #94a3b8; font-size: .8rem; }
+    .file-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff;
+        border: 1px solid #eef2f5;
+        border-radius: 12px;
+        padding: 10px 14px;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+    }
+    .file-chip .fc-icon {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        border-radius: 10px;
+        background: rgba(213, 33, 42, .08);
+        color: #d5212a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .file-chip .fc-name {
+        font-weight: 700;
+        color: #334155;
+        font-size: .88rem;
+        direction: ltr;
+        text-align: right;
+        word-break: break-all;
+    }
+    .file-chip .fc-size { font-size: .74rem; color: #94a3b8; }
+    .file-chip .fc-remove {
+        border: none;
+        background: rgba(213, 33, 42, .08);
+        color: #d5212a;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all .2s;
+    }
+    .file-chip .fc-remove:hover { background: #d5212a; color: #fff; }
+
+    .wizard-nav-btn {
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+
+    /* Autocomplete */
+    .position-relative-container { position: relative; }
+    .autocomplete-items {
+        position: absolute;
+        border: 1px solid #e2e8f0;
+        border-top: none;
+        z-index: 99;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 220px;
+        overflow-y: auto;
+        background: #fff;
+        display: none;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+    }
+    .autocomplete-items div {
+        padding: 10px 14px;
+        cursor: pointer;
+        background: #fff;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: .9rem;
+        font-weight: 600;
+        color: #334155;
+    }
+    .autocomplete-items div:hover { background: rgba(213, 33, 42, .06); }
+</style>
+
+<div class="mb-4 border-bottom pb-2">
+    <h2 class="text-secondary"><i class="fas fa-wand-magic-sparkles me-2 text-danger"></i>إضافة مريض / زيارة ونتائج</h2>
+    <p class="text-muted mb-0">ثلاث خطوات بسيطة تفصل بينك وبين تسجيل زيارة كاملة — حتى للمرضى الجدد.</p>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="max-width:760px; margin:0 auto 20px;">
+        <i class="fas fa-exclamation-circle me-2"></i>يرجى مراجعة البيانات التالية:
+        <div asp-validation-summary="All" class="mt-2"></div>
+    </div>
+}
+
+<div class="wizard-card">
+    <div class="card-body p-4 p-lg-5">
+
+        <!-- Stepper -->
+        <div class="stepper mb-4">
+            <div class="step-item active" data-step="1">
+                <div class="step-circle">1</div>
+                <span class="step-label">المريض</span>
+            </div>
+            <div class="step-item" data-step="2">
+                <div class="step-circle">2</div>
+                <span class="step-label">بيانات الزيارة</span>
+            </div>
+            <div class="step-item" data-step="3">
+                <div class="step-circle">3</div>
+                <span class="step-label">النتائج والملفات</span>
+            </div>
+        </div>
+        <div class="progress mb-2" style="height:6px; border-radius:8px; background:#f1f5f9;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" id="wizardProgress" role="progressbar" style="width:33.33%; background:#d5212a; border-radius:8px;"></div>
+        </div>
+        <p class="text-center small text-muted mb-4" id="stepHint"><i class="fas fa-user me-1"></i>الخطوة 1: حدد المريض — اكتب رقم الهاتف أو سجل مريضاً جديداً</p>
+
+        <form asp-action="AddVisit" method="post" enctype="multipart/form-data" id="wizardForm" novalidate>
+            @Html.AntiForgeryToken()
+
+            <!-- ═════ STEP 1 : Patient ═════ -->
+            <div class="step-panel active" data-step-panel="1">
+                <label class="form-label"><i class="fas fa-mobile-alt me-1 text-danger"></i>رقم الهاتف <span class="text-danger">*</span></label>
+                <div class="input-group position-relative-container">
+                    <input asp-for="PhoneNumber" class="form-control" dir="ltr" id="phoneNumberInput"
+                           placeholder="01xxxxxxxxx" autocomplete="off" style="text-align:right;" />
+                    <span class="input-group-text bg-light d-none" id="searchSpinner"><i class="fas fa-spinner fa-spin text-danger"></i></span>
+                    <div id="autocomplete-list" class="autocomplete-items w-100"></div>
+                </div>
+                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+
+                <div id="patientFoundChip">
+                    <i class="fas fa-check-circle me-2"></i><span id="foundPatientName">مريض مسجل</span>
+                    <small class="d-block text-muted fw-normal mt-1">سيتم إضافة الزيارة لهذا المريض مباشرة.</small>
+                </div>
+
+                <div class="form-check form-switch mt-4">
+                    <input class="form-check-input" type="checkbox" role="switch" id="isNewPatientSwitch" />
+                    <label class="form-check-label fw-bold" for="isNewPatientSwitch">
+                        <i class="fas fa-user-plus me-1 text-success"></i> مريض جديد؟ أدخل اسمه وستتم إضافته تلقائياً
+                    </label>
+                </div>
+
+                <div id="newPatientWrap" style="display:none;" class="mt-3">
+                    <label asp-for="PatientName" class="form-label">اسم المريض رباعي <span class="text-danger">*</span></label>
+                    <input asp-for="PatientName" class="form-control" id="patientNameInput" placeholder="أدخل الاسم بالكامل" />
+                    <span asp-validation-for="PatientName" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- ═════ STEP 2 : Visit ═════ -->
+            <div class="step-panel" data-step-panel="2">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label asp-for="VisitDate" class="form-label"><i class="fas fa-calendar-alt me-1 text-danger"></i>تاريخ الزيارة <span class="text-danger">*</span></label>
+                        <input asp-for="VisitDate" type="date" class="form-control" id="visitDateInput" />
+                        <span asp-validation-for="VisitDate" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><i class="fas fa-eye me-1 text-success"></i>ظهور النتيجة للمريض</label>
+                        <div class="form-check form-switch mt-2">
+                            <input asp-for="IsAvailable" class="form-check-input" type="checkbox" role="switch" id="isAvailableSwitch" checked />
+                            <label class="form-check-label fw-bold" for="isAvailableSwitch">متاحة في الموقع (بحث برقم الهاتف)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label asp-for="Notes" class="form-label"><i class="fas fa-sticky-note me-1 text-danger"></i>ملاحظات الزيارة</label>
+                    <textarea asp-for="Notes" class="form-control" id="notesInput" rows="3" placeholder="تحاليل مطلوبة، ملاحظات على الحالة، أو أي تفاصيل مساعدة..."></textarea>
+                    <span asp-validation-for="Notes" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <!-- ═════ STEP 3 : Results & Files ═════ -->
+            <div class="step-panel" data-step-panel="3">
+                <div class="mb-4">
+                    <label asp-for="TestName" class="form-label"><i class="fas fa-flask me-1 text-danger"></i>اسم التحليل</label>
+                    <input asp-for="TestName" class="form-control" id="testNameInput" placeholder="مثال: صورة دم كاملة CBC، فيتامين د، وظائف كبد..." />
+                    <span asp-validation-for="TestName" class="text-danger small"></span>
+                    <small class="text-muted d-block mt-1"><i class="fas fa-lightbulb me-1"></i>اختياري — إذا تركته فارغاً سيُستخدم اسم الملف المرفوع.</small>
+                </div>
+
+                <label class="form-label"><i class="fas fa-file-pdf me-1 text-danger"></i>ملفات النتائج (PDF)</label>
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="fileInput" asp-for="Files" class="d-none" multiple accept=".pdf" />
+                    <i class="fas fa-cloud-arrow-up"></i>
+                    <div class="dz-title">اضغط هنا أو اسحب ملفات PDF وأفلتها</div>
+                    <div class="dz-sub">يمكن إضافة أكثر من ملف — هذه الخطوة اختيارية</div>
+                </div>
+                <span asp-validation-for="Files" class="text-danger small"></span>
+
+                <div id="fileChips" class="mt-3 d-flex flex-column gap-2"></div>
+            </div>
+
+            <!-- Nav buttons -->
+            <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top" style="border-color:#f1f5f9!important;">
+                <button type="button" id="prevBtn" class="btn btn-light wizard-nav-btn border" style="display:none;">
+                    <i class="fas fa-arrow-right me-1"></i>السابق
+                </button>
+                <div class="ms-auto d-flex gap-2">
+                    <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-secondary wizard-nav-btn">إلغاء</a>
+                    <button type="button" id="nextBtn" class="btn btn-danger wizard-nav-btn">
+                        التالي<i class="fas fa-arrow-left ms-1"></i>
+                    </button>
+                    <button type="submit" id="submitBtn" class="btn btn-success wizard-nav-btn" style="display:none;">
+                        <i class="fas fa-check me-1"></i>حفظ الكل
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var currentStep = 1;
+            var MAX_STEP = 3;
+            var phoneInput = document.getElementById('phoneNumberInput');
+            var searchSpinner = document.getElementById('searchSpinner');
+            var isNewPatientSwitch = document.getElementById('isNewPatientSwitch');
+            var newPatientWrap = document.getElementById('newPatientWrap');
+            var patientNameInput = document.getElementById('patientNameInput');
+            var patientFoundChip = document.getElementById('patientFoundChip');
+            var foundPatientName = document.getElementById('foundPatientName');
+            var dropZone = document.getElementById('dropZone');
+            var fileInput = document.getElementById('fileInput');
+            var fileChips = document.getElementById('fileChips');
+            var nextBtn = document.getElementById('nextBtn');
+            var prevBtn = document.getElementById('prevBtn');
+            var submitBtn = document.getElementById('submitBtn');
+            var progressBar = document.getElementById('wizardProgress');
+            var stepHint = document.getElementById('stepHint');
+            var dataTransfer = new DataTransfer();
+            var searchTimeout;
+
+            function autocompleteEl() { return document.getElementById('autocomplete-list'); }
+
+            function showStep(n) {
+                currentStep = n;
+                var panels = document.querySelectorAll('[data-step-panel]');
+                panels.forEach(function (p) { p.classList.remove('active'); });
+                var target = document.querySelector('[data-step-panel="' + n + '"]');
+                if (target) target.classList.add('active');
+
+                document.querySelectorAll('.step-item').forEach(function (s) {
+                    var sNum = parseInt(s.getAttribute('data-step'), 10);
+                    s.classList.toggle('active', sNum === n);
+                    s.classList.toggle('done', sNum < n);
+                });
+
+                progressBar.style.width = (n / MAX_STEP * 100) + '%';
+                prevBtn.style.display = n === 1 ? 'none' : 'inline-block';
+                var isLast = n === MAX_STEP;
+                nextBtn.style.display = isLast ? 'none' : 'inline-block';
+                submitBtn.style.display = isLast ? 'inline-block' : 'none';
+                stepHint.innerHTML = stepMeta(n);
+            }
+
+            function stepMeta(n) {
+                if (n === 1) return '<i class="fas fa-user me-1"></i>الخطوة 1 من 3: حدد المريض — اكتب الرقم أو سجل مريضاً جديداً';
+                if (n === 2) return '<i class="fas fa-calendar-check me-1"></i>الخطوة 2 من 3: بيانات الزيارة';
+                return '<i class="fas fa-flask me-1"></i>الخطوة 3 من 3: التحليل ورفع النتائج (اختياري)';
+            }
+
+            function showToast(msg, isError) {
+                var toast = document.createElement('div');
+                toast.className = 'alert alert-' + (isError ? 'danger' : 'success') + ' alert-dismissible fade show position-fixed';
+                toast.style.cssText = 'top:20px;right:20px;z-index:9999;border-radius:12px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.15);';
+                toast.innerHTML = '<i class="fas fa-' + (isError ? 'exclamation-circle' : 'check-circle') + ' me-2"></i>' + msg;
+                document.body.appendChild(toast);
+                setTimeout(function () { toast.remove(); }, 2600);
+            }
+
+            // ── validation per step ──
+            function validateStep(n) {
+                if (n === 1) {
+                    if (!phoneInput.value.trim()) { showToast('يرجى إدخال رقم الهاتف أولاً', true); phoneInput.focus(); return false; }
+                    if (phoneInput.value.trim().length < 10) { showToast('رقم الهاتف يبدو غير مكتمل', true); phoneInput.focus(); return false; }
+                    if (isNewPatientSwitch.checked && !patientNameInput.value.trim()) {
+                        showToast('أدخل اسم المريض الجديد', true); patientNameInput.focus(); return false;
+                    }
+                    return true;
+                }
+                if (n === 2) {
+                    var d = document.getElementById('visitDateInput');
+                    if (d && !d.value) { showToast('اختر تاريخ الزيارة', true); d.focus(); return false; }
+                    return true;
+                }
+                return true; // step 3 — files optional
+            }
+
+            nextBtn.addEventListener('click', function () {
+                if (validateStep(currentStep)) { showStep(currentStep + 1); }
+            });
+            prevBtn.addEventListener('click', function () {
+                if (currentStep > 1) { showStep(currentStep - 1); }
+            });
+
+            // ── New patient toggle ──
+            isNewPatientSwitch.addEventListener('change', function () {
+                newPatientWrap.style.display = this.checked ? 'block' : 'none';
+                patientNameInput.required = this.checked;
+                hideFoundChip();
+            });
+
+            function hideFoundChip() { patientFoundChip.style.display = 'none'; foundPatientName.textContent = ''; }
+
+            // ── Autocomplete (search existing patients) ──
+            phoneInput.addEventListener('input', function () {
+                var phone = this.value.trim();
+                var list = autocompleteEl();
+                list.innerHTML = '';
+                hideFoundChip();
+                if (!phone) { searchSpinner.classList.add('d-none'); return; }
+
+                clearTimeout(searchTimeout);
+                searchSpinner.classList.remove('d-none');
+                searchTimeout = setTimeout(function () {
+                    fetch('@Url.Action("SearchByPhone", "Patients")?phone=' + encodeURIComponent(phone))
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            searchSpinner.classList.add('d-none');
+                            if (data.success && data.patients && data.patients.length > 0) {
+                                data.patients.slice(0, 6).forEach(function (p) {
+                                    var item = document.createElement('div');
+                                    item.innerHTML = '<strong dir="ltr">' + p.phone + '</strong> — ' + p.name;
+                                    item.addEventListener('click', function () {
+                                        phoneInput.value = p.phone;
+                                        list.innerHTML = '';
+                                        patientFoundChip.style.display = 'block';
+                                        foundPatientName.textContent = p.name;
+                                        isNewPatientSwitch.checked = false;
+                                        newPatientWrap.style.display = 'none';
+                                    });
+                                    list.appendChild(item);
+                                });
+                                list.style.display = 'block';
+                            }
+                        })
+                        .catch(function () { searchSpinner.classList.add('d-none'); });
+                }, 300);
+            });
+
+            // ── Dropzone (drag & drop + click) ──
+            dropZone.addEventListener('click', function () { fileInput.click(); });
+            dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('dragover'); });
+            dropZone.addEventListener('drop', function (e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                addFiles(e.dataTransfer.files);
+            });
+            fileInput.addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+
+            function addFiles(fileList) {
+                Array.from(fileList).forEach(function (file) {
+                    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                        showToast('الملف "' + file.name + '" ليس PDF — تم تجاهله', 'red');
+                        return;
+                    }
+                    dataTransfer.items.add(file);
+                });
+                renderChips();
+            }
+
+            function renderChips() {
+                fileChips.innerHTML = '';
+                var files = dataTransfer.files;
+                for (var i = 0; i < files.length; i++) {
+                    (function (file, idx) {
+                        var chip = document.createElement('div');
+                        chip.className = 'file-chip';
+                        var size = file.size > 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.round(file.size / 1024) + ' KB';
+                        chip.innerHTML =
+                            '<div class="fc-icon"><i class="fas fa-file-pdf"></i></div>' +
+                            '<div class="flex-grow-1"><div class="fc-name">' + file.name + '</div><div class="fc-size">' + size + '</div></div>' +
+                            '<button type="button" class="fc-remove" title="إزالة"><i class="fas fa-times"></i></button>';
+                        chip.querySelector('.fc-remove').addEventListener('click', function () {
+                            dataTransfer.items.remove(idx);
+                            renderChips();
+                        });
+                        fileChips.appendChild(chip);
+                    })(files[i], i);
+                }
+                if (files.length > 0) fileInput.files = dataTransfer.files;
+            }
+
+            // ── Submit gating & UX ──
+            document.getElementById('wizardForm').addEventListener('submit', function (e) {
+                if (!validateStep(currentStep)) { e.preventDefault(); return; }
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري الحفظ...';
+            });
+
+            // close autocomplete on outside click
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.position-relative-container')) {
+                    var list = autocompleteEl();
+                    if (list) list.style.display = 'none';
+                }
+            });
+        })();
+    </script>
+}

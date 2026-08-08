@@ -61,7 +61,10 @@
         <!-- Sidebar  -->
         <nav id="sidebar">
             <div class="sidebar-header d-flex justify-content-between align-items-center">
-                <h3>معمل أمان</h3>
+                <h3 class="d-flex align-items-center gap-2 mb-0">
+                    <img src="~/images/aman-logo.jpg" alt="معمل أمان" style="width:38px;height:38px;border-radius:10px;object-fit:cover;" />
+                    معمل أمان
+                </h3>
                 <button type="button" id="sidebarCollapseInside" class="btn btn-outline-light btn-sm d-md-none">
                     <i class="fas fa-times"></i>
                 </button>
@@ -78,7 +81,7 @@
                     <a asp-controller="Patients" asp-action="Create"><i class="fas fa-user-plus me-2"></i> إضافة مريض</a>
                 </li>
                 <li>
-                    <a asp-controller="Visits" asp-action="AddByPhone"><i class="fas fa-file-medical me-2"></i> إضافة زيارة ونتائج</a>
+                    <a asp-controller="Visits" asp-action="AddVisit"><i class="fas fa-wand-magic-sparkles me-2"></i> إضافة مريض / زيارة ونتائج</a>
                 </li>
                 <li>
                     <form asp-controller="Admin" asp-action="Logout" method="post" class="d-inline border-0 p-0 m-0">
@@ -94,11 +97,11 @@
         <div id="content">
             <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
                 <div class="container-fluid">
-                    <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                    <button type="button" id="sidebarCollapse" class="btn btn-danger">
                         <i class="fas fa-align-right"></i>
                         <span>تبديل القائمة</span>
                     </button>
-                    <div class="ms-auto fw-bold text-primary">
+                    <div class="ms-auto fw-bold text-danger">
                         لوحة تحكم الإدارة
                     </div>
                 </div>

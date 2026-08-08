@@ -30,7 +30,7 @@
 </head>
 <body>
     <div class="login-card">
-        <h3 class="text-center text-primary mb-4">معمل أمان - تسجيل الدخول</h3>
+        <h3 class="text-center text-danger mb-4">معمل أمان - تسجيل الدخول</h3>
 
         @if (ViewBag.Error != null)
         {
@@ -48,7 +48,7 @@
                 <label for="password" class="form-label">كلمة المرور</label>
                 <input type="password" class="form-control" id="password" name="password" required />
             </div>
-            <button type="submit" class="btn btn-primary w-100">تسجيل الدخول</button>
+            <button type="submit" class="btn btn-danger w-100">تسجيل الدخول</button>
         </form>
     </div>
 </body>

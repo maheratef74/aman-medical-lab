@@ -16,6 +16,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <!-- External stylesheet -->
     <link rel="stylesheet" href="~/css/amanlab.css" />
+    <!-- PWA -->
+    <link rel="manifest" href="~/manifest.webmanifest" />
+    <meta name="theme-color" content="#d5212a" />
+    <link rel="apple-touch-icon" href="~/icons/icon-180.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="معمل أمان" />
     <!-- PDF.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <!-- Google Fonts (Cairo – Arabic) -->
@@ -29,8 +37,9 @@
 <!-- ══════════════════ NAVBAR ══════════════════ -->
 <nav id="mainNav" class="navbar navbar-expand-lg fixed-top py-2">
     <div class="container">
-        <a class="navbar-brand navbar-brand-custom" href="#hero">
-            <i class="bi bi-activity me-1"></i>معمل <span>أمان</span>
+        <a class="navbar-brand navbar-brand-custom d-inline-flex align-items-center gap-2" href="#hero">
+            <img src="~/images/aman-logo.jpg" alt="معمل أمان" />
+            معمل <span>أمان</span>
         </a>
         <button class="navbar-toggler border-0 shadow-none" type="button"
                 data-bs-toggle="collapse" data-bs-target="#navMenu"
@@ -91,7 +100,7 @@
 </section>
 
 <!-- ══════════════════ SEARCH (after hero) ══════════════════ -->
-<section id="searchSection" style="background:linear-gradient(135deg,#0d2958,#0d6efd); padding:60px 0;">
+<section id="searchSection" style="background:linear-gradient(135deg,#7f1d1d,#d5212a); padding:60px 0;">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-8">
@@ -120,7 +129,7 @@
 </section>
 
 <!-- ══════════════════ RESULTS ══════════════════ -->
-<section id="resultsSection" style="display:none; background:#f0f7ff; padding:60px 0;">
+<section id="resultsSection" style="display:none; background:#fef2f2; padding:60px 0;">
     <div class="container">
         <div class="text-center mb-4">
             <span class="section-eyebrow"><i class="bi bi-clipboard2-pulse me-1"></i>نتائج التحاليل</span>
@@ -146,8 +155,8 @@
             <div class="col-md-10 col-lg-8">
                 <div class="visit-card" style="background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 40px; border: 1px solid #eef2f5;">
                     <div class="visit-header text-center mb-4">
-                        <i class="bi bi-house-heart" style="font-size: 3.5rem; color: #0d6efd; margin-bottom: 10px; display: block;"></i>
-                        <h2 style="font-weight: 800; color: #0d2958; font-size: 1.8rem;">طلب زيارة منزلية</h2>
+                        <i class="bi bi-house-heart" style="font-size: 3.5rem; color: #d5212a; margin-bottom: 10px; display: block;"></i>
+                        <h2 style="font-weight: 800; color: #7f1d1d; font-size: 1.8rem;">طلب زيارة منزلية</h2>
                         <p style="color: #64748b; font-size: 0.95rem;">احجز زيارة منزلية لسحب العينات بكل سهولة وأمان</p>
                     </div>
                     
@@ -177,12 +186,12 @@
                             <div class="file-upload-wrapper" style="position: relative;">
                                 <input type="file" id="userImage" class="file-upload-input" accept="image/png, image/jpeg, image/jpg" style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; top: 0; left: 0;">
                                 <div class="file-upload-display" style="background: #fff; border: 2px dashed #ced4da; border-radius: 12px; padding: 25px 20px; text-align: center; transition: all 0.3s ease; cursor: pointer;">
-                                    <i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: #0d6efd; margin-bottom: 10px; display: block;"></i>
+                                    <i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: #d5212a; margin-bottom: 10px; display: block;"></i>
                                     <div style="font-weight: 700; color: #2c3e50;">اضغط هنا لاختيار صورة</div>
                                     <small class="text-muted">JPG, PNG (الحد الأقصى 5 ميجابايت)</small>
                                 </div>
                             </div>
-                            <div id="imagePreviewContainer" style="display: none; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed #0d6efd; text-align: center; padding: 10px; background: #f8f9fa;">
+                            <div id="imagePreviewContainer" style="display: none; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed #d5212a; text-align: center; padding: 10px; background: #f8f9fa;">
                                 <img id="imagePreview" src="#" alt="Preview" style="max-width: 100%; max-height: 250px; border-radius: 8px; object-fit: contain;">
                             </div>
                         </div>
@@ -441,11 +450,14 @@
     <div class="container">
         <div class="row align-items-center gy-3">
             <div class="col-md-4 text-center text-md-start">
-                <span class="fw-bold fs-5"><i class="bi bi-activity me-1"></i>معمل أمان للتحاليل الطبية</span>
+                <span class="fw-bold fs-5 d-inline-flex align-items-center gap-2">
+                    <img src="~/images/aman-logo.jpg" alt="معمل أمان" style="width:38px;height:38px;border-radius:10px;object-fit:cover;" />
+                    معمل أمان للتحاليل الطبية
+                </span>
             </div>
             <div class="col-md-4 text-center">
                 <div class="d-flex justify-content-center gap-3 mb-2">
-                    <a href="https://www.facebook.com" target="_blank" class="text-white fs-5"><i class="bi bi-facebook"></i></a>
+                    <a href="https://www.facebook.com/share/14bprGjCcGJ/" target="_blank" class="text-white fs-5"><i class="bi bi-facebook"></i></a>
                     <a href="https://wa.me/201143041240" target="_blank" class="text-white fs-5"><i class="bi bi-whatsapp"></i></a>
                     <a href="https://www.instagram.com" target="_blank" class="text-white fs-5"><i class="bi bi-instagram"></i></a>
                     <a href="https://twitter.com" target="_blank" class="text-white fs-5"><i class="bi bi-twitter-x"></i></a>
@@ -478,8 +490,96 @@
     <i class="bi bi-whatsapp"></i>
 </a>
 
+<!-- ══════════════════ PWA INSTALL PROMPT ══════════════════ -->
+<div class="pwa-install-card" id="pwaInstallCard" style="display:none; opacity:0;" role="dialog" aria-label="تثبيت التطبيق">
+    <button type="button" class="pwa-close" id="pwaCloseBtn" aria-label="إغلاق"><i class="bi bi-x-lg"></i></button>
+    <img src="~/images/aman-logo.jpg" alt="معمل أمان" class="pwa-logo" />
+    <div class="pwa-text">
+        <div class="pwa-title">ثبّت تطبيق معمل أمان</div>
+        <div class="pwa-desc" id="pwaDesc">أضف التطبيق إلى شاشتك الرئيسية ووصل لنتائج تحاليلك بضغطة واحدة.</div>
+    </div>
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn">
+        <i class="bi bi-download me-1"></i><span>تثبيت التطبيق</span>
+    </button>
+</div>
+
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ══════════════════ PWA: Service Worker + Install Prompt ══════════════════
+    (function () {
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function (err) {
+                    console.warn('SW registration failed:', err);
+                });
+            });
+        }
+
+        var installCard = document.getElementById('pwaInstallCard');
+        if (!installCard) return;
+
+        var installBtn = document.getElementById('pwaInstallBtn');
+        var closeBtn = document.getElementById('pwaCloseBtn');
+        var pwaDesc = document.getElementById('pwaDesc');
+        var deferredPrompt = null;
+        var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        var dismissed = sessionStorage.getItem('pwa_dismissed');
+
+        // Already installed → never show the prompt
+        if (isStandalone) return;
+
+        function showCard(iOSMode) {
+            if (dismissed) return;
+            if (iOSMode) {
+                installBtn.style.display = 'none';
+                pwaDesc.textContent = 'اضغط زر المشاركة (Share) في المتصفح ثم اختر "إضافة إلى الشاشة الرئيسية".';
+            }
+            installCard.style.display = 'flex';
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () { installCard.style.opacity = '1'; });
+            });
+        }
+
+        function hideCard() {
+            installCard.style.opacity = '0';
+            setTimeout(function () { installCard.style.display = 'none'; }, 250);
+        }
+
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            showCard(false);
+        });
+
+        window.addEventListener('appinstalled', function () {
+            hideCard();
+        });
+
+        installBtn.addEventListener('click', function () {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function (choice) {
+                if (choice.outcome === 'accepted') {
+                    hideCard();
+                }
+                deferredPrompt = null;
+            });
+        });
+
+        closeBtn.addEventListener('click', function () {
+            sessionStorage.setItem('pwa_dismissed', '1');
+            dismissed = '1';
+            hideCard();
+        });
+
+        // iOS has no beforeinstallprompt → show a hint after a short delay
+        if (isIOS && !isStandalone) {
+            setTimeout(function () { showCard(true); }, 2500);
+        }
+    })();
+</script>
 <script>
     // Navbar scroll effect
     window.addEventListener('scroll', () => {

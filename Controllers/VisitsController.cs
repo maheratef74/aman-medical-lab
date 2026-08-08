@@ -153,5 +153,87 @@ namespace DrMohamedWeb.Controllers
 
             return RedirectToAction(nameof(Index), new { patientId = patientId });
         }
+
+        [HttpGet]
+        public IActionResult AddVisit()
+        {
+            var model = new AddVisitViewModel { VisitDate = DateTime.Today };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddVisit(AddVisitViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var phone = model.PhoneNumber.Trim();
+            var patient = await _context.Patients
+                .FirstOrDefaultAsync(p => p.PhoneNumber == phone);
+
+            if (patient == null)
+            {
+                if (string.IsNullOrWhiteSpace(model.PatientName))
+                {
+                    ModelState.AddModelError("PatientName", "لم يتم العثور على مريض بهذا الرقم — أدخل اسم المريض لتسجيله كمريض جديد");
+                    return View(model);
+                }
+
+                patient = new Patient
+                {
+                    Name = model.PatientName.Trim(),
+                    PhoneNumber = phone,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Patients.Add(patient);
+                await _context.SaveChangesAsync();
+            }
+
+            var visit = new PatientVisit
+            {
+                PatientId = patient.Id,
+                VisitDate = model.VisitDate,
+                Notes = model.Notes,
+                IsAvailable = model.IsAvailable
+            };
+
+            _context.PatientVisits.Add(visit);
+            await _context.SaveChangesAsync();
+
+            int uploadedCount = 0;
+            if (model.Files != null && model.Files.Count > 0)
+            {
+                foreach (var file in model.Files)
+                {
+                    if (file.Length > 0 && Path.GetExtension(file.FileName).ToLower() == ".pdf")
+                    {
+                        var filePath = await _fileUploadService.UploadPdfAsync(file);
+
+                        _context.TestResults.Add(new TestResult
+                        {
+                            VisitId = visit.Id,
+                            TestName = string.IsNullOrWhiteSpace(model.TestName)
+                                ? Path.GetFileNameWithoutExtension(file.FileName)
+                                : model.TestName,
+                            FilePath = filePath
+                        });
+
+                        uploadedCount++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["Success"] = uploadedCount > 0
+                ? $"تم تسجيل الزيارة ورفع {uploadedCount} ملف بنجاح ✓"
+                : "تم تسجيل الزيارة بنجاح ✓ — يمكنك رفع النتائج لاحقاً";
+
+            return RedirectToAction(nameof(Index), new { patientId = patient.Id });
+        }
     }
 }

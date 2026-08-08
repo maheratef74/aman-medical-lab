@@ -7,7 +7,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
     <h2 class="text-secondary"><i class="fas fa-users me-2"></i>قائمة المرضى</h2>
-    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus me-1"></i> إضافة مريض جديد</a>
+    <a asp-action="Create" class="btn btn-danger"><i class="fas fa-plus me-1"></i> إضافة مريض جديد</a>
 </div>
 
 <div class="card shadow-sm border-0 mb-4">
@@ -20,7 +20,7 @@
                 </div>
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary">بحث</button>
+                <button type="submit" class="btn btn-danger">بحث</button>
             </div>
             @if (!string.IsNullOrEmpty(ViewBag.SearchPhone as string))
             {
@@ -53,7 +53,7 @@
                         {
                             <tr>
                                 <td>@item.Id</td>
-                                <td class="fw-bold text-primary">@item.Name</td>
+                                <td class="fw-bold text-danger">@item.Name</td>
                                 <td>@item.PhoneNumber</td>
                                 <td>@item.CreatedAt.ToString("yyyy-MM-dd")</td>
                                 <td class="text-center">
