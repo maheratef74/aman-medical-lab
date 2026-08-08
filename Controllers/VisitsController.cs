@@ -22,11 +22,10 @@ namespace DrMohamedWeb.Controllers
             _fileUploadService = fileUploadService;
         }
 
-        public async Task<IActionResult> Index(int patientId)
+        public async Task<IActionResult> Index(int patientId, int page = 1)
         {
             var patient = await _context.Patients
                 .Include(p => p.Visits)
-                .ThenInclude(v => v.TestResults)
                 .FirstOrDefaultAsync(p => p.Id == patientId);
 
             if (patient == null)
@@ -34,10 +33,34 @@ namespace DrMohamedWeb.Controllers
                 return NotFound();
             }
 
-            ViewBag.PatientName = patient.Name;
-            ViewBag.PatientId = patient.Id;
+            var query = _context.PatientVisits
+                .Where(v => v.PatientId == patientId)
+                .Include(v => v.TestResults);
 
-            return View(patient.Visits.OrderByDescending(v => v.VisitDate));
+            var totalItems = await query.CountAsync();
+            var pageSize = 10;
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            if (page < 1) page = 1;
+            if (totalPages > 0 && page > totalPages) page = totalPages;
+
+            var visits = await query
+                .OrderByDescending(v => v.VisitDate)
+                .ThenByDescending(v => v.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.PatientName = patient.Name;
+            ViewBag.PatientPhone = patient.PhoneNumber;
+            ViewBag.PatientId = patient.Id;
+            ViewBag.PatientCreatedAt = patient.CreatedAt;
+            ViewBag.TotalVisits = patient.Visits.Count;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+
+            return View(visits);
         }
 
         [HttpGet]

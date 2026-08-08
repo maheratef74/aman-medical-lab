@@ -3,104 +3,428 @@
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "زيارات المريض";
+    ViewData["Breadcrumb"] = "معمل أمان / المرضى / زيارات المريض";
 }
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
-        <i class="fas fa-check-circle me-2 fs-5"></i>
-        <strong>@TempData["Success"]</strong>
-        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+<!-- ═══════════════════════════════════════
+     PAGE HEADER
+═══════════════════════════════════════ -->
+<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+    <div>
+        <div class="flex items-center gap-2 text-sm text-slate-400 mb-2">
+            <a asp-controller="Patients" asp-action="Index" class="hover:text-brand-600 transition-colors">المرضى</a>
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            <span class="text-slate-600 font-semibold truncate">@ViewBag.PatientName</span>
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-800">
+            زيارات المريض:
+            <span class="text-brand-600">@ViewBag.PatientName</span>
+        </h2>
+        <p class="text-slate-500 text-sm mt-1">سجل الزيارات والنتائج المرفوعة</p>
     </div>
-}
 
-<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-    <div>
-        <h2 class="text-secondary mb-0"><i class="fas fa-calendar-alt me-2"></i>زيارات المريض: <span class="text-danger fw-bold">@ViewBag.PatientName</span></h2>
-    </div>
-    <div>
-        <a asp-controller="Patients" asp-action="Index" class="btn btn-outline-secondary me-2">عودة لمعرض المرضى</a>
-        <a asp-action="Create" asp-route-patientId="@ViewBag.PatientId" class="btn btn-success"><i class="fas fa-plus me-1"></i> إضافة زيارة جديدة</a>
+    <div class="flex items-center gap-3 shrink-0">
+        <a asp-controller="Patients" asp-action="Index"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            عودة للمرضى
+        </a>
+        <a asp-action="Create" asp-route-patientId="@ViewBag.PatientId"
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-bold shadow-lg shadow-brand-600/25 hover:bg-brand-700 hover:-translate-y-0.5 active:translate-y-0 transition-all">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            إضافة زيارة
+        </a>
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════
+     PATIENT INFO PROFILE CARD
+═══════════════════════════════════════ -->
+<div class="bg-white rounded-2xl border border-slate-100 shadow-card p-5 mb-6 overflow-hidden relative">
+    <!-- Top colored accent line -->
+    <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-l from-brand-600 to-brand-700"></div>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 mt-2">
+        <!-- Patient Details -->
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center font-black text-2xl text-brand-700 shrink-0 shadow-sm">
+                @(string.IsNullOrEmpty(ViewBag.PatientName as string) ? "؟" : (ViewBag.PatientName as string).Substring(0, 1))
+            </div>
+            <div>
+                <h3 class="text-lg font-black text-slate-800">@ViewBag.PatientName</h3>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-400 font-semibold mt-1">
+                    <span class="flex items-center gap-1 font-mono text-slate-500" dir="ltr">
+                        <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i>
+                        @ViewBag.PatientPhone
+                    </span>
+                    <span class="text-slate-200">•</span>
+                    <span class="flex items-center gap-1">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                        مسجل منذ: @(((DateTime)ViewBag.PatientCreatedAt).ToString("yyyy-MM-dd"))
+                    </span>
+                    <span class="text-slate-200">•</span>
+                    <span class="flex items-center gap-1 text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full font-bold">
+                        <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                        @ViewBag.TotalVisits زيارة إجمالية
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex items-center gap-3 self-stretch md:self-auto">
+            <!-- Call button -->
+            <a href="tel:@ViewBag.PatientPhone" 
+               class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-bold hover:bg-slate-50 active:scale-95 transition-all shadow-sm">
+                <i data-lucide="phone-call" class="w-4 h-4 text-slate-500"></i>
+                اتصال هاتفي
+            </a>
+            
+            <!-- WhatsApp button -->
+            @{
+                var rawPhone = ViewBag.PatientPhone as string ?? "";
+                var waPhone = rawPhone.StartsWith("0") ? "20" + rawPhone.Substring(1) : (rawPhone.StartsWith("20") ? rawPhone : "20" + rawPhone);
+            }
+            <a href="https://wa.me/@waPhone" 
+               target="_blank"
+               class="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-green-550 border-0 text-white text-sm font-bold hover:bg-green-600 active:scale-95 transition-all shadow-md shadow-green-600/10" 
+               style="background-color: #25D366;">
+                <i data-lucide="message-square" class="w-4 h-4 text-white"></i>
+                مراسلة واتساب
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SUCCESS / ERROR ALERTS
+═══════════════════════════════════════ -->
+@if (TempData["Success"] != null)
+{
+    <div id="successAlert"
+         class="flex items-center gap-3 px-4 py-3.5 mb-5 rounded-xl bg-green-50 border border-green-200 text-green-800">
+        <i data-lucide="check-circle" class="w-5 h-5 text-green-600 shrink-0"></i>
+        <span class="text-sm font-bold flex-1">@TempData["Success"]</span>
+        <button onclick="document.getElementById('successAlert').remove()"
+                class="p-1 rounded-lg hover:bg-green-100 text-green-500 transition-colors">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+    </div>
+}
+
+<!-- ═══════════════════════════════════════
+     VISITS LIST
+═══════════════════════════════════════ -->
 @if (Model != null && Model.Any())
 {
-    @foreach (var visit in Model)
-    {
-        <div class="card shadow-sm mb-4 border-0 border-start border-4 border-info">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <h5 class="mb-0 text-info me-3">تاريخ الزيارة: @visit.VisitDate.ToString("yyyy-MM-dd")</h5>
-                    <form asp-controller="Visits" asp-action="ToggleAvailability" method="post" class="m-0 p-0">
-                        <input type="hidden" name="id" value="@visit.Id" />
-                        <input type="hidden" name="patientId" value="@visit.PatientId" />
-                        @if (visit.IsAvailable)
-                        {
-                            <button type="submit" class="btn btn-sm btn-success rounded-pill" title="متاحة للمريض - اضغط للإخفاء">
-                                <i class="fas fa-eye"></i> متاحة (عرض)
+    <div class="space-y-4">
+        @foreach (var visit in Model)
+        {
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden hover:shadow-card-hover transition-shadow duration-200">
+
+                <!-- Visit Card Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50/50">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="w-10 h-10 rounded-xl @(visit.IsAvailable ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500") flex items-center justify-center shrink-0">
+                            <i data-lucide="@(visit.IsAvailable ? "eye" : "eye-off")" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-extrabold text-slate-800">
+                                    @visit.VisitDate.ToString("yyyy-MM-dd")
+                                </span>
+                                @if (visit.IsAvailable)
+                                {
+                                    <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                                        <i data-lucide="eye" class="w-3 h-3"></i> متاحة للمريض
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                                        <i data-lucide="eye-off" class="w-3 h-3"></i> مخفية
+                                    </span>
+                                }
+                            </div>
+                            <div class="text-xs text-slate-400 font-medium mt-0.5">
+                                @(visit.TestResults != null && visit.TestResults.Any()
+                                    ? $"{visit.TestResults.Count()} ملف مرفوع"
+                                    : "لا يوجد ملفات بعد")
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <!-- Toggle availability -->
+                        <form asp-controller="Visits" asp-action="ToggleAvailability" method="post" class="inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@visit.Id" />
+                            <input type="hidden" name="patientId" value="@visit.PatientId" />
+                            <button type="submit"
+                                    title="@(visit.IsAvailable ? "اضغط لإخفاء الزيارة" : "اضغط لإظهار الزيارة")"
+                                    class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all @(visit.IsAvailable ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200")">
+                                <i data-lucide="@(visit.IsAvailable ? "eye" : "eye-off")" class="w-3.5 h-3.5"></i>
+                                @(visit.IsAvailable ? "متاحة (اضغط للإخفاء)" : "مخفية (اضغط للإظهار)")
                             </button>
+                        </form>
+
+                        <!-- Upload PDF button -->
+                        <a asp-controller="TestResults" asp-action="Upload" asp-route-visitId="@visit.Id"
+                           class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-colors shadow-sm shadow-brand-600/20">
+                            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                            رفع PDF
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Visit Card Body -->
+                <div class="px-5 py-4">
+                    <!-- Notes -->
+                    @if (!string.IsNullOrEmpty(visit.Notes))
+                    {
+                        <div class="flex items-start gap-2.5 mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <i data-lucide="sticky-note" class="w-4 h-4 text-slate-400 mt-0.5 shrink-0"></i>
+                            <div>
+                                <span class="text-xs font-bold text-slate-500">ملاحظات الزيارة</span>
+                                <p class="text-sm text-slate-700 mt-0.5">@visit.Notes</p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Test results -->
+                    @if (visit.TestResults != null && visit.TestResults.Any())
+                    {
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 mb-3 flex items-center gap-1.5">
+                                <i data-lucide="files" class="w-3.5 h-3.5"></i>
+                                النتائج المرفوعة لهذه الزيارة
+                            </p>
+                            <div class="space-y-2">
+                                @foreach (var test in visit.TestResults)
+                                {
+                                    <div class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                                        <!-- Icon -->
+                                        <div class="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600 shrink-0">
+                                            <i data-lucide="file-text" class="w-4 h-4"></i>
+                                        </div>
+
+                                        <!-- Name + date -->
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-sm font-bold text-slate-800 truncate">@test.TestName</div>
+                                            <div class="text-xs text-slate-400 font-medium mt-0.5">
+                                                <i data-lucide="clock" class="w-3 h-3 inline ml-0.5"></i>
+                                                @test.UploadedAt.ToString("yyyy-MM-dd HH:mm")
+                                            </div>
+                                        </div>
+
+                                        <!-- Actions -->
+                                        <div class="flex items-center gap-2 shrink-0">
+                                            <a href="@test.FilePath"
+                                               target="_blank"
+                                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors">
+                                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                                عرض
+                                            </a>
+                                            <button type="button"
+                                                    onclick="openDeleteResultModal(@test.Id, '@test.TestName.Replace("'", "\\'")')"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-red-200 text-red-500 text-xs font-bold hover:bg-red-50 hover:border-red-300 transition-colors"
+                                                    title="حذف">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- No files warning -->
+                        <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                            <p class="text-xs font-semibold text-amber-700">لم يتم رفع أي نتائج لهذه الزيارة بعد</p>
+                            <a asp-controller="TestResults" asp-action="Upload" asp-route-visitId="@visit.Id"
+                               class="mr-auto inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-900 transition-colors whitespace-nowrap">
+                                رفع الآن <i data-lucide="arrow-left" class="w-3 h-3"></i>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        
+        <!-- Pagination controls -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            var currentPage = (int)ViewBag.CurrentPage;
+            var totalPages = (int)ViewBag.TotalPages;
+            
+            <div class="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 mt-4 rounded-2xl">
+                <span class="text-xs text-slate-500 font-semibold">
+                    عرض الصفحة <strong class="text-slate-800">@currentPage</strong> من <strong class="text-slate-800">@totalPages</strong> (إجمالي <strong class="text-slate-800">@ViewBag.TotalItems</strong> زيارة)
+                </span>
+                
+                <div class="flex items-center gap-1">
+                    <!-- Previous Page -->
+                    @if (currentPage > 1)
+                    {
+                        <a asp-action="Index" asp-route-patientId="@ViewBag.PatientId" asp-route-page="@(currentPage - 1)" 
+                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-100 bg-slate-50 text-slate-300 pointer-events-none">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </span>
+                    }
+
+                    <!-- Page Numbers -->
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        if (i == currentPage)
+                        {
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-brand-600 text-white text-xs font-bold shadow-sm shadow-brand-600/20">@i</span>
                         }
                         else
                         {
-                            <button type="submit" class="btn btn-sm btn-secondary rounded-pill" title="مخفية عن المريض - اضغط للإظهار">
-                                <i class="fas fa-eye-slash"></i> مخفية (إخفاء)
-                            </button>
+                            <a asp-action="Index" asp-route-patientId="@ViewBag.PatientId" asp-route-page="@i" 
+                               class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors">@i</a>
                         }
-                    </form>
-                </div>
-                <a asp-controller="TestResults" asp-action="Upload" asp-route-visitId="@visit.Id" class="btn btn-sm btn-danger">
-                    <i class="fas fa-upload me-1"></i> رفع نتائج فحص PDF
-                </a>
-            </div>
-            <div class="card-body bg-light">
-                @if (!string.IsNullOrEmpty(visit.Notes))
-                {
-                    <p class="mb-3 text-muted"><strong>ملاحظات:</strong> @visit.Notes</p>
-                }
+                    }
 
-                @if (visit.TestResults != null && visit.TestResults.Any())
-                {
-                    <h6 class="fw-bold mb-2">النتائج المرفوعة لهذه الزيارة:</h6>
-                    <div class="list-group">
-                        @foreach (var test in visit.TestResults)
-                        {
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-file-pdf text-danger me-2"></i>
-                                    <strong>@test.TestName</strong> 
-                                    <small class="text-muted ms-2">(تم الرفع: @test.UploadedAt.ToString("g"))</small>
-                                </div>
-                                <div>
-                                    <a href="@test.FilePath" target="_blank" class="btn btn-sm btn-outline-secondary me-2">
-                                        <i class="fas fa-eye"></i> عرض
-                                    </a>
-                                    <form asp-controller="TestResults" asp-action="Delete" asp-route-id="@test.Id" method="post" class="d-inline border-0 p-0 m-0" onsubmit="return confirm('هل أنت متأكد من مسح هذه النتيجة؟');">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="alert alert-warning mb-0 py-2">
-                        <i class="fas fa-exclamation-triangle me-1"></i> لم يتم رفع أي نتائج لهذه الزيارة بعد.
-                    </div>
-                }
+                    <!-- Next Page -->
+                    @if (currentPage < totalPages)
+                    {
+                        <a asp-action="Index" asp-route-patientId="@ViewBag.PatientId" asp-route-page="@(currentPage + 1)" 
+                           class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-100 bg-slate-50 text-slate-300 pointer-events-none">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </span>
+                    }
+                </div>
             </div>
-        </div>
-    }
+        }
+    </div>
 }
 else
 {
-    <div class="alert alert-info py-4 text-center shadow-sm">
-        <i class="fas fa-info-circle fa-2x mb-3 text-info"></i>
-        <h5>لا يوجد زيارات مسجلة لهذا المريض</h5>
-        <p>قم بإضافة زيارة جديدة للبدء في رفع نتائج التحاليل.</p>
-        <a asp-action="Create" asp-route-patientId="@ViewBag.PatientId" class="btn btn-success mt-2"><i class="fas fa-plus me-1"></i> إضافة أول زيارة</a>
+    <!-- Empty state -->
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-card p-12 flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-brand-50 flex items-center justify-center mb-5 text-brand-600">
+            <i data-lucide="calendar-x" class="w-8 h-8"></i>
+        </div>
+        <h4 class="text-lg font-extrabold text-slate-700 mb-2">لا يوجد زيارات مسجلة</h4>
+        <p class="text-slate-400 text-sm mb-6">
+            قم بإضافة زيارة جديدة للبدء في رفع نتائج التحاليل
+        </p>
+        <div class="flex gap-3">
+            <a asp-action="Create" asp-route-patientId="@ViewBag.PatientId"
+               class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-bold shadow-lg shadow-brand-600/25 hover:bg-brand-700 transition-all">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                إضافة أول زيارة
+            </a>
+            <a asp-controller="Visits" asp-action="AddVisit"
+               class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+                <i data-lucide="flask-conical" class="w-4 h-4"></i>
+                زيارة + نتائج معاً
+            </a>
+        </div>
     </div>
+}
+
+<!-- ═══════════════════════════════════════
+     DELETE RESULT MODAL (Popup)
+═══════════════════════════════════════ -->
+<div id="deleteResultModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeDeleteResultModal()"></div>
+
+    <!-- Panel -->
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-modal">
+        <div class="h-1.5 bg-gradient-to-l from-red-500 to-red-700"></div>
+
+        <div class="px-6 py-6 text-center">
+            <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="trash-2" class="w-7 h-7 text-red-600"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-800 mb-2">تأكيد حذف النتيجة</h3>
+            <p class="text-sm text-slate-500 mb-1">هل أنت متأكد من حذف نتيجة التحليل</p>
+            <p class="text-base font-extrabold text-red-600 mb-2" id="deleteResultNameDisplay">—</p>
+            <p class="text-xs text-slate-400 mb-6">
+                سيتم حذف ملف النتيجة نهائياً من قاعدة البيانات والملفات ولا يمكن التراجع عن هذا الإجراء.
+            </p>
+
+            <form asp-controller="TestResults" asp-action="Delete" method="post" id="deleteResultForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="deleteResultId" />
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeDeleteResultModal()"
+                            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                            class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        نعم، احذف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    lucide.createIcons();
+
+    function openDeleteResultModal(id, name) {
+        document.getElementById('deleteResultId').value = id;
+        document.getElementById('deleteResultNameDisplay').textContent = name;
+        var el = document.getElementById('deleteResultModal');
+        el.classList.remove('hidden');
+        el.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteResultModal() {
+        var el = document.getElementById('deleteResultModal');
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteResultModal();
+        }
+    });
+
+    @if (TempData["Success"] != null)
+    {
+        <text>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.showToast) showToast('@TempData["Success"]', 'success');
+        });
+        </text>
+    }
+</script>
+
+<style>
+    @@keyframes modalIn {
+        from { opacity: 0; transform: scale(.95) translateY(8px); }
+        to   { opacity: 1; transform: scale(1)  translateY(0); }
+    }
+    .animate-modal { animation: modalIn .2s ease-out; }
+</style>
 }

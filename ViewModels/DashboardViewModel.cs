@@ -15,10 +15,23 @@ namespace DrMohamedWeb.ViewModels
         public int AvailableVisits { get; set; }
         public int HiddenVisits { get; set; }
 
+        // ── 6-month data ──
         public List<string> MonthLabels { get; set; } = new();
         public List<int> PatientsPerMonth { get; set; } = new();
         public List<int> VisitsPerMonth { get; set; } = new();
         public List<int> ResultsPerMonth { get; set; } = new();
+
+        // ── Last 30 days (weekly buckets: 4 weeks + current) ──
+        public List<string> Labels30Days { get; set; } = new();
+        public List<int> Patients30Days { get; set; } = new();
+        public List<int> Visits30Days { get; set; } = new();
+        public List<int> Results30Days { get; set; } = new();
+
+        // ── Last 7 days (daily) ──
+        public List<string> Labels7Days { get; set; } = new();
+        public List<int> Patients7Days { get; set; } = new();
+        public List<int> Visits7Days { get; set; } = new();
+        public List<int> Results7Days { get; set; } = new();
 
         public List<RecentVisitItem> RecentVisits { get; set; } = new();
         public List<RecentPatientItem> RecentPatients { get; set; } = new();

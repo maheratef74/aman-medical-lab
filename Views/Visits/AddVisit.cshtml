@@ -3,531 +3,565 @@
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "إضافة مريض / زيارة ونتائج";
+    ViewData["Breadcrumb"] = "معمل أمان / إضافة زيارة ونتائج";
 }
 
-<style>
-    .wizard-card {
-        background: #fff;
-        border-radius: 18px;
-        box-shadow: 0 6px 24px rgba(15, 23, 42, .08);
-        border: 1px solid #eef2f5;
-        max-width: 760px;
-        margin: 0 auto;
-    }
-
-    /* Stepper */
-    .stepper {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        padding-top: 8px;
-    }
-    .step-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 110px;
-        position: relative;
-        text-align: center;
-        gap: 8px;
-    }
-    .step-item:not(:first-child)::before {
-        content: '';
-        position: absolute;
-        top: 21px;
-        right: calc(100% - 6px);
-        width: calc(100% - 78px);
-        height: 3px;
-        background: #e2e8f0;
-        border-radius: 3px;
-        transition: background .3s;
-    }
-    .step-item.done::before { background: #198754; }
-    .step-circle {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: #f1f5f9;
-        color: #94a3b8;
-        font-weight: 800;
-        font-size: 1.05rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2.5px solid #e2e8f0;
-        transition: all .3s;
-        z-index: 1;
-    }
-    .step-item.active .step-circle {
-        background: #d5212a;
-        border-color: #d5212a;
-        color: #fff;
-        box-shadow: 0 6px 16px rgba(213, 33, 42, .35);
-    }
-    .step-item.done .step-circle {
-        background: #198754;
-        border-color: #198754;
-        color: #fff;
-    }
-    .step-label {
-        font-size: .82rem;
-        font-weight: 700;
-        color: #94a3b8;
-    }
-    .step-item.active .step-label { color: #d5212a; }
-    .step-item.done .step-label { color: #198754; }
-
-    /* Panels */
-    .step-panel { display: none; animation: fadeStep .35s ease; }
-    .step-panel.active { display: block; }
-    @@keyframes fadeStep {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .form-label { font-weight: 700; color: #334155; font-size: .92rem; }
-    .form-control, .form-select {
-        border-radius: 12px;
-        padding: 12px 14px;
-        border: 1.5px solid #e2e8f0;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #d5212a;
-        box-shadow: 0 0 0 4px rgba(213, 33, 42, .1);
-    }
-
-    /* Patient found chip */
-    #patientFoundChip {
-        display: none;
-        background: rgba(25, 135, 84, .08);
-        border: 1.5px dashed #198754;
-        color: #14532d;
-        border-radius: 12px;
-        padding: 12px 16px;
-        font-weight: 700;
-        margin-top: 12px;
-    }
-
-    /* Dropzone */
-    .drop-zone {
-        border: 2px dashed #cbd5e1;
-        border-radius: 16px;
-        padding: 34px 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: all .25s;
-        background: #f8fafc;
-    }
-    .drop-zone:hover, .drop-zone.dragover {
-        border-color: #d5212a;
-        background: rgba(213, 33, 42, .04);
-    }
-    .drop-zone i { font-size: 2.4rem; color: #d5212a; display: block; margin-bottom: 10px; }
-    .drop-zone .dz-title { font-weight: 800; color: #334155; }
-    .drop-zone .dz-sub { color: #94a3b8; font-size: .8rem; }
-    .file-chip {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: #fff;
-        border: 1px solid #eef2f5;
-        border-radius: 12px;
-        padding: 10px 14px;
-        box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
-    }
-    .file-chip .fc-icon {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
-        border-radius: 10px;
-        background: rgba(213, 33, 42, .08);
-        color: #d5212a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .file-chip .fc-name {
-        font-weight: 700;
-        color: #334155;
-        font-size: .88rem;
-        direction: ltr;
-        text-align: right;
-        word-break: break-all;
-    }
-    .file-chip .fc-size { font-size: .74rem; color: #94a3b8; }
-    .file-chip .fc-remove {
-        border: none;
-        background: rgba(213, 33, 42, .08);
-        color: #d5212a;
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all .2s;
-    }
-    .file-chip .fc-remove:hover { background: #d5212a; color: #fff; }
-
-    .wizard-nav-btn {
-        padding: 12px 28px;
-        border-radius: 12px;
-        font-weight: 700;
-    }
-
-    /* Autocomplete */
-    .position-relative-container { position: relative; }
-    .autocomplete-items {
-        position: absolute;
-        border: 1px solid #e2e8f0;
-        border-top: none;
-        z-index: 99;
-        top: 100%;
-        left: 0;
-        right: 0;
-        max-height: 220px;
-        overflow-y: auto;
-        background: #fff;
-        display: none;
-        border-radius: 0 0 12px 12px;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
-    }
-    .autocomplete-items div {
-        padding: 10px 14px;
-        cursor: pointer;
-        background: #fff;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: .9rem;
-        font-weight: 600;
-        color: #334155;
-    }
-    .autocomplete-items div:hover { background: rgba(213, 33, 42, .06); }
-</style>
-
-<div class="mb-4 border-bottom pb-2">
-    <h2 class="text-secondary"><i class="fas fa-wand-magic-sparkles me-2 text-danger"></i>إضافة مريض / زيارة ونتائج</h2>
-    <p class="text-muted mb-0">ثلاث خطوات بسيطة تفصل بينك وبين تسجيل زيارة كاملة — حتى للمرضى الجدد.</p>
+<!-- ═══════════════════════════════════════
+     PAGE HEADER
+═══════════════════════════════════════ -->
+<div class="mb-6">
+    <h2 class="text-2xl font-extrabold text-slate-800">إضافة مريض / زيارة ونتائج</h2>
+    <p class="text-slate-500 text-sm mt-1">ثلاث خطوات بسيطة تفصلك عن تسجيل زيارة كاملة — حتى للمرضى الجدد</p>
 </div>
 
+<!-- Validation summary -->
 @if (!ViewData.ModelState.IsValid)
 {
-    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="max-width:760px; margin:0 auto 20px;">
-        <i class="fas fa-exclamation-circle me-2"></i>يرجى مراجعة البيانات التالية:
-        <div asp-validation-summary="All" class="mt-2"></div>
+    <div class="flex items-start gap-3 p-4 mb-6 rounded-xl bg-red-50 border border-red-200 max-w-2xl mx-auto">
+        <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 shrink-0 mt-0.5"></i>
+        <div>
+            <p class="text-sm font-bold text-red-700 mb-1">يوجد أخطاء في البيانات:</p>
+            <div asp-validation-summary="All" class="text-sm text-red-600 space-y-0.5"></div>
+        </div>
     </div>
 }
 
-<div class="wizard-card">
-    <div class="card-body p-4 p-lg-5">
+<!-- ═══════════════════════════════════════
+     WIZARD CARD
+═══════════════════════════════════════ -->
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
 
-        <!-- Stepper -->
-        <div class="stepper mb-4">
-            <div class="step-item active" data-step="1">
-                <div class="step-circle">1</div>
-                <span class="step-label">المريض</span>
-            </div>
-            <div class="step-item" data-step="2">
-                <div class="step-circle">2</div>
-                <span class="step-label">بيانات الزيارة</span>
-            </div>
-            <div class="step-item" data-step="3">
-                <div class="step-circle">3</div>
-                <span class="step-label">النتائج والملفات</span>
-            </div>
-        </div>
-        <div class="progress mb-2" style="height:6px; border-radius:8px; background:#f1f5f9;">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" id="wizardProgress" role="progressbar" style="width:33.33%; background:#d5212a; border-radius:8px;"></div>
-        </div>
-        <p class="text-center small text-muted mb-4" id="stepHint"><i class="fas fa-user me-1"></i>الخطوة 1: حدد المريض — اكتب رقم الهاتف أو سجل مريضاً جديداً</p>
+        <!-- Card top accent -->
+        <div class="h-1.5 bg-gradient-to-l from-brand-600 to-brand-800"></div>
 
-        <form asp-action="AddVisit" method="post" enctype="multipart/form-data" id="wizardForm" novalidate>
-            @Html.AntiForgeryToken()
+        <div class="p-6 sm:p-8">
 
-            <!-- ═════ STEP 1 : Patient ═════ -->
-            <div class="step-panel active" data-step-panel="1">
-                <label class="form-label"><i class="fas fa-mobile-alt me-1 text-danger"></i>رقم الهاتف <span class="text-danger">*</span></label>
-                <div class="input-group position-relative-container">
-                    <input asp-for="PhoneNumber" class="form-control" dir="ltr" id="phoneNumberInput"
-                           placeholder="01xxxxxxxxx" autocomplete="off" style="text-align:right;" />
-                    <span class="input-group-text bg-light d-none" id="searchSpinner"><i class="fas fa-spinner fa-spin text-danger"></i></span>
-                    <div id="autocomplete-list" class="autocomplete-items w-100"></div>
-                </div>
-                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+            <!-- ─── STEPPER ─── -->
+            <div class="flex items-center justify-center gap-0 mb-6">
 
-                <div id="patientFoundChip">
-                    <i class="fas fa-check-circle me-2"></i><span id="foundPatientName">مريض مسجل</span>
-                    <small class="d-block text-muted fw-normal mt-1">سيتم إضافة الزيارة لهذا المريض مباشرة.</small>
-                </div>
-
-                <div class="form-check form-switch mt-4">
-                    <input class="form-check-input" type="checkbox" role="switch" id="isNewPatientSwitch" />
-                    <label class="form-check-label fw-bold" for="isNewPatientSwitch">
-                        <i class="fas fa-user-plus me-1 text-success"></i> مريض جديد؟ أدخل اسمه وستتم إضافته تلقائياً
-                    </label>
-                </div>
-
-                <div id="newPatientWrap" style="display:none;" class="mt-3">
-                    <label asp-for="PatientName" class="form-label">اسم المريض رباعي <span class="text-danger">*</span></label>
-                    <input asp-for="PatientName" class="form-control" id="patientNameInput" placeholder="أدخل الاسم بالكامل" />
-                    <span asp-validation-for="PatientName" class="text-danger small"></span>
-                </div>
-            </div>
-
-            <!-- ═════ STEP 2 : Visit ═════ -->
-            <div class="step-panel" data-step-panel="2">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label asp-for="VisitDate" class="form-label"><i class="fas fa-calendar-alt me-1 text-danger"></i>تاريخ الزيارة <span class="text-danger">*</span></label>
-                        <input asp-for="VisitDate" type="date" class="form-control" id="visitDateInput" />
-                        <span asp-validation-for="VisitDate" class="text-danger small"></span>
+                <!-- Step 1 -->
+                <div class="flex flex-col items-center" id="step-indicator-1">
+                    <div id="step-circle-1"
+                         class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 border-brand-600 bg-brand-600 text-white shadow-lg shadow-brand-600/30 transition-all duration-300">
+                        1
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label"><i class="fas fa-eye me-1 text-success"></i>ظهور النتيجة للمريض</label>
-                        <div class="form-check form-switch mt-2">
-                            <input asp-for="IsAvailable" class="form-check-input" type="checkbox" role="switch" id="isAvailableSwitch" checked />
-                            <label class="form-check-label fw-bold" for="isAvailableSwitch">متاحة في الموقع (بحث برقم الهاتف)</label>
+                    <span id="step-label-1" class="text-xs font-bold text-brand-600 mt-2 whitespace-nowrap">المريض</span>
+                </div>
+
+                <!-- Connector 1-2 -->
+                <div class="flex-1 mx-2">
+                    <div class="h-0.5 bg-slate-200 rounded-full relative overflow-hidden">
+                        <div id="connector-1" class="absolute inset-y-0 right-0 w-0 bg-green-500 rounded-full transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex flex-col items-center" id="step-indicator-2">
+                    <div id="step-circle-2"
+                         class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 border-slate-200 bg-white text-slate-400 transition-all duration-300">
+                        2
+                    </div>
+                    <span id="step-label-2" class="text-xs font-bold text-slate-400 mt-2 whitespace-nowrap">بيانات الزيارة</span>
+                </div>
+
+                <!-- Connector 2-3 -->
+                <div class="flex-1 mx-2">
+                    <div class="h-0.5 bg-slate-200 rounded-full relative overflow-hidden">
+                        <div id="connector-2" class="absolute inset-y-0 right-0 w-0 bg-green-500 rounded-full transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex flex-col items-center" id="step-indicator-3">
+                    <div id="step-circle-3"
+                         class="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 border-slate-200 bg-white text-slate-400 transition-all duration-300">
+                        3
+                    </div>
+                    <span id="step-label-3" class="text-xs font-bold text-slate-400 mt-2 whitespace-nowrap">النتائج والملفات</span>
+                </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="h-1.5 bg-slate-100 rounded-full mb-2 overflow-hidden">
+                <div id="wizardProgress"
+                     class="h-full bg-gradient-to-l from-brand-600 to-brand-700 rounded-full progress-stripe transition-all duration-500"
+                     style="width: 33.33%"></div>
+            </div>
+
+            <!-- Step hint -->
+            <p id="stepHint" class="text-center text-xs font-semibold text-slate-400 mb-6">
+                الخطوة 1 من 3: حدد المريض — اكتب رقم الهاتف أو سجل مريضاً جديداً
+            </p>
+
+            <!-- ─── FORM ─── -->
+            <form asp-action="AddVisit" method="post" enctype="multipart/form-data" id="wizardForm" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- ══ STEP 1: PATIENT ══ -->
+                <div class="step-panel" data-step-panel="1">
+                    <label class="block text-sm font-bold text-slate-700 mb-1.5">
+                        <i data-lucide="phone" class="w-3.5 h-3.5 inline ml-1 text-brand-600"></i>
+                        رقم الهاتف
+                        <span class="text-brand-600">*</span>
+                    </label>
+
+                    <div class="relative" id="phone-autocomplete-wrap">
+                        <input asp-for="PhoneNumber"
+                               class="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:bg-white transition-colors"
+                               dir="ltr"
+                               id="phoneNumberInput"
+                               placeholder="01xxxxxxxxx"
+                               autocomplete="off"
+                               style="text-align: right;" />
+
+                        <!-- Search spinner -->
+                        <span id="searchSpinner"
+                              class="absolute inset-y-0 left-0 flex items-center pl-3.5 hidden">
+                            <svg class="animate-spin w-4 h-4 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+
+                        <!-- Autocomplete dropdown -->
+                        <div id="autocomplete-list"
+                             class="absolute top-full right-0 left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden hidden max-h-52 overflow-y-auto">
                         </div>
                     </div>
+                    <span asp-validation-for="PhoneNumber" class="mt-1 text-xs font-semibold text-red-600 flex items-center gap-1"></span>
+
+                    <!-- Patient found chip -->
+                    <div id="patientFoundChip"
+                         class="hidden mt-3 flex items-center gap-3 px-4 py-3 rounded-xl border border-green-200 bg-green-50 text-green-800">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-600 shrink-0"></i>
+                        <div>
+                            <div class="text-sm font-bold" id="foundPatientName">مريض مسجل</div>
+                            <div class="text-xs text-green-600 font-medium mt-0.5">سيتم إضافة الزيارة لهذا المريض مباشرة</div>
+                        </div>
+                    </div>
+
+                    <!-- New patient toggle -->
+                    <div class="mt-4 flex items-center gap-3">
+                        <button type="button"
+                                id="isNewPatientSwitch"
+                                role="switch"
+                                aria-checked="false"
+                                class="relative w-11 h-6 rounded-full bg-slate-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+                                onclick="toggleNewPatient(this)">
+                            <span class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 translate-x-0"></span>
+                        </button>
+                        <label class="text-sm font-bold text-slate-700 cursor-pointer" onclick="document.getElementById('isNewPatientSwitch').click()">
+                            <i data-lucide="user-plus" class="w-4 h-4 inline ml-1 text-green-600"></i>
+                            مريض جديد؟ أدخل اسمه وستتم إضافته تلقائياً
+                        </label>
+                    </div>
+                    <!-- Hidden checkbox for form binding -->
+                    <input type="hidden" id="isNewPatientHidden" name="IsNewPatient" value="false" />
+
+                    <!-- New patient name field -->
+                    <div id="newPatientWrap" class="hidden mt-4">
+                        <label asp-for="PatientName" class="block text-sm font-bold text-slate-700 mb-1.5">
+                            اسم المريض رباعي
+                            <span class="text-brand-600">*</span>
+                        </label>
+                        <input asp-for="PatientName"
+                               class="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:bg-white transition-colors"
+                               id="patientNameInput"
+                               placeholder="أدخل الاسم بالكامل" />
+                        <span asp-validation-for="PatientName" class="mt-1 text-xs font-semibold text-red-600"></span>
+                    </div>
                 </div>
 
-                <div class="mt-4">
-                    <label asp-for="Notes" class="form-label"><i class="fas fa-sticky-note me-1 text-danger"></i>ملاحظات الزيارة</label>
-                    <textarea asp-for="Notes" class="form-control" id="notesInput" rows="3" placeholder="تحاليل مطلوبة، ملاحظات على الحالة، أو أي تفاصيل مساعدة..."></textarea>
-                    <span asp-validation-for="Notes" class="text-danger small"></span>
+                <!-- ══ STEP 2: VISIT DATA ══ -->
+                <div class="step-panel hidden" data-step-panel="2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label asp-for="VisitDate" class="block text-sm font-bold text-slate-700 mb-1.5">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 inline ml-1 text-brand-600"></i>
+                                تاريخ الزيارة
+                                <span class="text-brand-600">*</span>
+                            </label>
+                            <input asp-for="VisitDate"
+                                   type="date"
+                                   class="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:bg-white transition-colors"
+                                   id="visitDateInput" />
+                            <span asp-validation-for="VisitDate" class="mt-1 text-xs font-semibold text-red-600"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">
+                                <i data-lucide="eye" class="w-3.5 h-3.5 inline ml-1 text-green-600"></i>
+                                ظهور النتيجة للمريض
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input asp-for="IsAvailable"
+                                       type="checkbox"
+                                       role="switch"
+                                       id="isAvailableSwitch"
+                                       checked
+                                       class="w-11 h-6 appearance-none rounded-full bg-slate-200 checked:bg-green-600 transition-colors cursor-pointer relative
+                                              before:content-[''] before:absolute before:top-0.5 before:right-0.5 before:w-5 before:h-5 before:rounded-full before:bg-white before:shadow before:transition-transform
+                                              checked:before:translate-x-[-20px]" />
+                                <span class="text-sm font-semibold text-slate-700">متاحة في الموقع (بحث برقم الهاتف)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <label asp-for="Notes" class="block text-sm font-bold text-slate-700 mb-1.5">
+                            <i data-lucide="sticky-note" class="w-3.5 h-3.5 inline ml-1 text-brand-600"></i>
+                            ملاحظات الزيارة
+                        </label>
+                        <textarea asp-for="Notes"
+                                  class="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:bg-white transition-colors resize-none"
+                                  id="notesInput"
+                                  rows="4"
+                                  placeholder="تحاليل مطلوبة، ملاحظات على الحالة، أو أي تفاصيل مساعدة..."></textarea>
+                        <span asp-validation-for="Notes" class="mt-1 text-xs font-semibold text-red-600"></span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- ═════ STEP 3 : Results & Files ═════ -->
-            <div class="step-panel" data-step-panel="3">
-                <div class="mb-4">
-                    <label asp-for="TestName" class="form-label"><i class="fas fa-flask me-1 text-danger"></i>اسم التحليل</label>
-                    <input asp-for="TestName" class="form-control" id="testNameInput" placeholder="مثال: صورة دم كاملة CBC، فيتامين د، وظائف كبد..." />
-                    <span asp-validation-for="TestName" class="text-danger small"></span>
-                    <small class="text-muted d-block mt-1"><i class="fas fa-lightbulb me-1"></i>اختياري — إذا تركته فارغاً سيُستخدم اسم الملف المرفوع.</small>
+                <!-- ══ STEP 3: FILES ══ -->
+                <div class="step-panel hidden" data-step-panel="3">
+                    <div class="mb-5">
+                        <label asp-for="TestName" class="block text-sm font-bold text-slate-700 mb-1.5">
+                            <i data-lucide="flask-conical" class="w-3.5 h-3.5 inline ml-1 text-brand-600"></i>
+                            اسم التحليل
+                        </label>
+                        <input asp-for="TestName"
+                               class="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:bg-white transition-colors"
+                               id="testNameInput"
+                               placeholder="مثال: صورة دم كاملة CBC، فيتامين د، وظائف كبد..." />
+                        <p class="mt-1.5 text-xs text-slate-400 font-medium">
+                            <i data-lucide="info" class="w-3 h-3 inline mr-0.5"></i>
+                            اختياري — إذا تركته فارغاً سيُستخدم اسم الملف المرفوع
+                        </p>
+                        <span asp-validation-for="TestName" class="mt-1 text-xs font-semibold text-red-600"></span>
+                    </div>
+
+                    <!-- Drop zone -->
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5 inline ml-1 text-brand-600"></i>
+                        ملفات النتائج (PDF)
+                    </label>
+                    <div id="dropZone"
+                         class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 hover:border-brand-400 hover:bg-brand-50/50 bg-slate-50">
+                        <input type="file" id="fileInput" name="Files" class="hidden" multiple accept=".pdf" />
+                        <div class="w-14 h-14 rounded-full bg-brand-50 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="upload-cloud" class="w-7 h-7 text-brand-600"></i>
+                        </div>
+                        <div class="text-sm font-bold text-slate-700 mb-1">اضغط هنا أو اسحب ملفات PDF وأفلتها</div>
+                        <div class="text-xs text-slate-400 font-medium">يمكن إضافة أكثر من ملف — هذه الخطوة اختيارية</div>
+                    </div>
+                    <span asp-validation-for="Files" class="mt-1 text-xs font-semibold text-red-600"></span>
+
+                    <!-- File chips -->
+                    <div id="fileChips" class="mt-3 flex flex-col gap-2"></div>
                 </div>
 
-                <label class="form-label"><i class="fas fa-file-pdf me-1 text-danger"></i>ملفات النتائج (PDF)</label>
-                <div class="drop-zone" id="dropZone">
-                    <input type="file" id="fileInput" asp-for="Files" class="d-none" multiple accept=".pdf" />
-                    <i class="fas fa-cloud-arrow-up"></i>
-                    <div class="dz-title">اضغط هنا أو اسحب ملفات PDF وأفلتها</div>
-                    <div class="dz-sub">يمكن إضافة أكثر من ملف — هذه الخطوة اختيارية</div>
-                </div>
-                <span asp-validation-for="Files" class="text-danger small"></span>
-
-                <div id="fileChips" class="mt-3 d-flex flex-column gap-2"></div>
-            </div>
-
-            <!-- Nav buttons -->
-            <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top" style="border-color:#f1f5f9!important;">
-                <button type="button" id="prevBtn" class="btn btn-light wizard-nav-btn border" style="display:none;">
-                    <i class="fas fa-arrow-right me-1"></i>السابق
-                </button>
-                <div class="ms-auto d-flex gap-2">
-                    <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-secondary wizard-nav-btn">إلغاء</a>
-                    <button type="button" id="nextBtn" class="btn btn-danger wizard-nav-btn">
-                        التالي<i class="fas fa-arrow-left ms-1"></i>
+                <!-- ─── NAV BUTTONS ─── -->
+                <div class="flex items-center justify-between mt-7 pt-5 border-t border-slate-100">
+                    <button type="button"
+                            id="prevBtn"
+                            class="hidden items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        السابق
                     </button>
-                    <button type="submit" id="submitBtn" class="btn btn-success wizard-nav-btn" style="display:none;">
-                        <i class="fas fa-check me-1"></i>حفظ الكل
-                    </button>
+
+                    <div class="flex items-center gap-3 mr-auto">
+                        <a asp-controller="Admin" asp-action="Dashboard"
+                           class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+                            إلغاء
+                        </a>
+                        <button type="button"
+                                id="nextBtn"
+                                class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-bold shadow-lg shadow-brand-600/25 hover:bg-brand-700 hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                            التالي
+                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        </button>
+                        <button type="submit"
+                                id="submitBtn"
+                                class="hidden items-center gap-2 px-6 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold shadow-lg shadow-green-600/25 hover:bg-green-700 hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            حفظ الكل
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        (function () {
-            var currentStep = 1;
-            var MAX_STEP = 3;
-            var phoneInput = document.getElementById('phoneNumberInput');
-            var searchSpinner = document.getElementById('searchSpinner');
-            var isNewPatientSwitch = document.getElementById('isNewPatientSwitch');
-            var newPatientWrap = document.getElementById('newPatientWrap');
-            var patientNameInput = document.getElementById('patientNameInput');
-            var patientFoundChip = document.getElementById('patientFoundChip');
-            var foundPatientName = document.getElementById('foundPatientName');
-            var dropZone = document.getElementById('dropZone');
-            var fileInput = document.getElementById('fileInput');
-            var fileChips = document.getElementById('fileChips');
-            var nextBtn = document.getElementById('nextBtn');
-            var prevBtn = document.getElementById('prevBtn');
-            var submitBtn = document.getElementById('submitBtn');
-            var progressBar = document.getElementById('wizardProgress');
-            var stepHint = document.getElementById('stepHint');
-            var dataTransfer = new DataTransfer();
-            var searchTimeout;
+    (function () {
+        var currentStep = 1;
+        var MAX_STEP = 3;
+        var phoneInput          = document.getElementById('phoneNumberInput');
+        var searchSpinner       = document.getElementById('searchSpinner');
+        var isNewPatientSwitch  = document.getElementById('isNewPatientSwitch');
+        var isNewPatientHidden  = document.getElementById('isNewPatientHidden');
+        var newPatientWrap      = document.getElementById('newPatientWrap');
+        var patientNameInput    = document.getElementById('patientNameInput');
+        var patientFoundChip    = document.getElementById('patientFoundChip');
+        var foundPatientName    = document.getElementById('foundPatientName');
+        var dropZone            = document.getElementById('dropZone');
+        var fileInput           = document.getElementById('fileInput');
+        var fileChips           = document.getElementById('fileChips');
+        var nextBtn             = document.getElementById('nextBtn');
+        var prevBtn             = document.getElementById('prevBtn');
+        var submitBtn           = document.getElementById('submitBtn');
+        var progressBar         = document.getElementById('wizardProgress');
+        var stepHintEl          = document.getElementById('stepHint');
+        var dataTransfer        = new DataTransfer();
+        var searchTimeout;
+        var isNewPatientEnabled = false;
 
-            function autocompleteEl() { return document.getElementById('autocomplete-list'); }
+        // ── Toggle new patient (custom switch) ──
+        window.toggleNewPatient = function(btn) {
+            isNewPatientEnabled = !isNewPatientEnabled;
+            btn.setAttribute('aria-checked', isNewPatientEnabled.toString());
+            isNewPatientHidden.value = isNewPatientEnabled.toString();
 
-            function showStep(n) {
-                currentStep = n;
-                var panels = document.querySelectorAll('[data-step-panel]');
-                panels.forEach(function (p) { p.classList.remove('active'); });
-                var target = document.querySelector('[data-step-panel="' + n + '"]');
-                if (target) target.classList.add('active');
-
-                document.querySelectorAll('.step-item').forEach(function (s) {
-                    var sNum = parseInt(s.getAttribute('data-step'), 10);
-                    s.classList.toggle('active', sNum === n);
-                    s.classList.toggle('done', sNum < n);
-                });
-
-                progressBar.style.width = (n / MAX_STEP * 100) + '%';
-                prevBtn.style.display = n === 1 ? 'none' : 'inline-block';
-                var isLast = n === MAX_STEP;
-                nextBtn.style.display = isLast ? 'none' : 'inline-block';
-                submitBtn.style.display = isLast ? 'inline-block' : 'none';
-                stepHint.innerHTML = stepMeta(n);
+            if (isNewPatientEnabled) {
+                btn.classList.replace('bg-slate-200', 'bg-green-500');
+                btn.querySelector('span').style.transform = 'translateX(-20px)';
+                newPatientWrap.classList.remove('hidden');
+                patientNameInput.required = true;
+            } else {
+                btn.classList.replace('bg-green-500', 'bg-slate-200');
+                btn.querySelector('span').style.transform = 'translateX(0)';
+                newPatientWrap.classList.add('hidden');
+                patientNameInput.required = false;
             }
+            hideFoundChip();
+        };
 
-            function stepMeta(n) {
-                if (n === 1) return '<i class="fas fa-user me-1"></i>الخطوة 1 من 3: حدد المريض — اكتب الرقم أو سجل مريضاً جديداً';
-                if (n === 2) return '<i class="fas fa-calendar-check me-1"></i>الخطوة 2 من 3: بيانات الزيارة';
-                return '<i class="fas fa-flask me-1"></i>الخطوة 3 من 3: التحليل ورفع النتائج (اختياري)';
-            }
+        function autocompleteEl() { return document.getElementById('autocomplete-list'); }
 
-            function showToast(msg, isError) {
-                var toast = document.createElement('div');
-                toast.className = 'alert alert-' + (isError ? 'danger' : 'success') + ' alert-dismissible fade show position-fixed';
-                toast.style.cssText = 'top:20px;right:20px;z-index:9999;border-radius:12px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.15);';
-                toast.innerHTML = '<i class="fas fa-' + (isError ? 'exclamation-circle' : 'check-circle') + ' me-2"></i>' + msg;
-                document.body.appendChild(toast);
-                setTimeout(function () { toast.remove(); }, 2600);
-            }
+        function showStep(n) {
+            currentStep = n;
 
-            // ── validation per step ──
-            function validateStep(n) {
-                if (n === 1) {
-                    if (!phoneInput.value.trim()) { showToast('يرجى إدخال رقم الهاتف أولاً', true); phoneInput.focus(); return false; }
-                    if (phoneInput.value.trim().length < 10) { showToast('رقم الهاتف يبدو غير مكتمل', true); phoneInput.focus(); return false; }
-                    if (isNewPatientSwitch.checked && !patientNameInput.value.trim()) {
-                        showToast('أدخل اسم المريض الجديد', true); patientNameInput.focus(); return false;
-                    }
-                    return true;
+            // Panels
+            document.querySelectorAll('[data-step-panel]').forEach(function (p) {
+                p.classList.add('hidden');
+            });
+            var target = document.querySelector('[data-step-panel="' + n + '"]');
+            if (target) target.classList.remove('hidden');
+
+            // Step circles styling
+            for (var i = 1; i <= MAX_STEP; i++) {
+                var circle = document.getElementById('step-circle-' + i);
+                var label  = document.getElementById('step-label-' + i);
+                if (i < n) {
+                    // done
+                    circle.className = 'w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 border-green-500 bg-green-500 text-white shadow-md transition-all duration-300';
+                    circle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+                    label.className  = 'text-xs font-bold text-green-600 mt-2 whitespace-nowrap';
+                } else if (i === n) {
+                    // active
+                    circle.className = 'w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 border-brand-600 bg-brand-600 text-white shadow-lg shadow-brand-600/30 transition-all duration-300';
+                    circle.innerHTML = i;
+                    label.className  = 'text-xs font-bold text-brand-600 mt-2 whitespace-nowrap';
+                } else {
+                    // upcoming
+                    circle.className = 'w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm border-2 border-slate-200 bg-white text-slate-400 transition-all duration-300';
+                    circle.innerHTML = i;
+                    label.className  = 'text-xs font-bold text-slate-400 mt-2 whitespace-nowrap';
                 }
-                if (n === 2) {
-                    var d = document.getElementById('visitDateInput');
-                    if (d && !d.value) { showToast('اختر تاريخ الزيارة', true); d.focus(); return false; }
-                    return true;
+
+                // Connectors
+                var connector = document.getElementById('connector-' + i);
+                if (connector) {
+                    connector.style.width = i < n ? '100%' : '0%';
                 }
-                return true; // step 3 — files optional
             }
 
-            nextBtn.addEventListener('click', function () {
-                if (validateStep(currentStep)) { showStep(currentStep + 1); }
-            });
-            prevBtn.addEventListener('click', function () {
-                if (currentStep > 1) { showStep(currentStep - 1); }
-            });
+            // Progress bar
+            progressBar.style.width = (n / MAX_STEP * 100) + '%';
 
-            // ── New patient toggle ──
-            isNewPatientSwitch.addEventListener('change', function () {
-                newPatientWrap.style.display = this.checked ? 'block' : 'none';
-                patientNameInput.required = this.checked;
-                hideFoundChip();
-            });
+            // Nav buttons
+            prevBtn.style.display  = n === 1       ? 'none'         : 'inline-flex';
+            nextBtn.style.display  = n === MAX_STEP ? 'none'         : 'flex';
+            submitBtn.style.display= n === MAX_STEP ? 'inline-flex'  : 'none';
 
-            function hideFoundChip() { patientFoundChip.style.display = 'none'; foundPatientName.textContent = ''; }
+            // Hint
+            var hints = [
+                'الخطوة 1 من 3: حدد المريض — اكتب رقم الهاتف أو سجل مريضاً جديداً',
+                'الخطوة 2 من 3: بيانات الزيارة',
+                'الخطوة 3 من 3: التحليل ورفع النتائج (اختياري)',
+            ];
+            stepHintEl.textContent = hints[n - 1];
+        }
 
-            // ── Autocomplete (search existing patients) ──
-            phoneInput.addEventListener('input', function () {
-                var phone = this.value.trim();
-                var list = autocompleteEl();
-                list.innerHTML = '';
-                hideFoundChip();
-                if (!phone) { searchSpinner.classList.add('d-none'); return; }
+        function hideFoundChip() {
+            patientFoundChip.classList.add('hidden');
+            foundPatientName.textContent = '';
+        }
 
-                clearTimeout(searchTimeout);
-                searchSpinner.classList.remove('d-none');
-                searchTimeout = setTimeout(function () {
-                    fetch('@Url.Action("SearchByPhone", "Patients")?phone=' + encodeURIComponent(phone))
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            searchSpinner.classList.add('d-none');
-                            if (data.success && data.patients && data.patients.length > 0) {
-                                data.patients.slice(0, 6).forEach(function (p) {
-                                    var item = document.createElement('div');
-                                    item.innerHTML = '<strong dir="ltr">' + p.phone + '</strong> — ' + p.name;
-                                    item.addEventListener('click', function () {
-                                        phoneInput.value = p.phone;
-                                        list.innerHTML = '';
-                                        patientFoundChip.style.display = 'block';
-                                        foundPatientName.textContent = p.name;
-                                        isNewPatientSwitch.checked = false;
-                                        newPatientWrap.style.display = 'none';
-                                    });
-                                    list.appendChild(item);
+        // ── Validation per step ──
+        function validateStep(n) {
+            if (n === 1) {
+                if (!phoneInput.value.trim()) {
+                    showWizardToast('يرجى إدخال رقم الهاتف أولاً', 'error');
+                    phoneInput.focus(); return false;
+                }
+                if (phoneInput.value.trim().length < 10) {
+                    showWizardToast('رقم الهاتف يبدو غير مكتمل', 'error');
+                    phoneInput.focus(); return false;
+                }
+                if (isNewPatientEnabled && !patientNameInput.value.trim()) {
+                    showWizardToast('أدخل اسم المريض الجديد', 'error');
+                    patientNameInput.focus(); return false;
+                }
+                return true;
+            }
+            if (n === 2) {
+                var d = document.getElementById('visitDateInput');
+                if (d && !d.value) {
+                    showWizardToast('اختر تاريخ الزيارة', 'error');
+                    d.focus(); return false;
+                }
+                return true;
+            }
+            return true; // step 3 — files optional
+        }
+
+        function showWizardToast(msg, type) {
+            if (window.showToast) { showToast(msg, type); return; }
+            alert(msg);
+        }
+
+        nextBtn.addEventListener('click', function () {
+            if (validateStep(currentStep)) showStep(currentStep + 1);
+        });
+        prevBtn.addEventListener('click', function () {
+            if (currentStep > 1) showStep(currentStep - 1);
+        });
+
+        // ── Autocomplete ──
+        phoneInput.addEventListener('input', function () {
+            var phone = this.value.trim();
+            var list = autocompleteEl();
+            list.innerHTML = '';
+            hideFoundChip();
+            if (!phone) { searchSpinner.classList.add('hidden'); return; }
+
+            clearTimeout(searchTimeout);
+            searchSpinner.classList.remove('hidden');
+            searchTimeout = setTimeout(function () {
+                fetch('@Url.Action("SearchByPhone", "Patients")?phone=' + encodeURIComponent(phone))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        searchSpinner.classList.add('hidden');
+                        list.innerHTML = '';
+                        if (data.success && data.patients && data.patients.length > 0) {
+                            data.patients.slice(0, 6).forEach(function (p) {
+                                var item = document.createElement('div');
+                                item.className = 'flex items-center gap-3 px-4 py-3 hover:bg-brand-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors';
+                                item.innerHTML =
+                                    '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-xs shrink-0">' + (p.name ? p.name[0] : '?') + '</div>' +
+                                    '<div class="flex-1 min-w-0"><div class="text-sm font-bold text-slate-800 truncate">' + p.name + '</div><div class="text-xs text-slate-400 font-mono" dir="ltr">' + p.phone + '</div></div>';
+                                item.addEventListener('click', function () {
+                                    phoneInput.value = p.phone;
+                                    list.classList.add('hidden');
+                                    patientFoundChip.classList.remove('hidden');
+                                    foundPatientName.textContent = p.name;
+                                    if (isNewPatientEnabled) {
+                                        document.getElementById('isNewPatientSwitch').click();
+                                    }
+                                    lucide.createIcons();
                                 });
-                                list.style.display = 'block';
-                            }
-                        })
-                        .catch(function () { searchSpinner.classList.add('d-none'); });
-                }, 300);
-            });
+                                list.appendChild(item);
+                            });
+                            list.classList.remove('hidden');
+                        }
+                    })
+                    .catch(function () { searchSpinner.classList.add('hidden'); });
+            }, 300);
+        });
 
-            // ── Dropzone (drag & drop + click) ──
-            dropZone.addEventListener('click', function () { fileInput.click(); });
-            dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('dragover'); });
-            dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('dragover'); });
-            dropZone.addEventListener('drop', function (e) {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-                addFiles(e.dataTransfer.files);
-            });
-            fileInput.addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+        // ── Dropzone ──
+        dropZone.addEventListener('click', function () { fileInput.click(); });
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropZone.classList.add('border-brand-400', 'bg-brand-50');
+        });
+        dropZone.addEventListener('dragleave', function () {
+            dropZone.classList.remove('border-brand-400', 'bg-brand-50');
+        });
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-brand-400', 'bg-brand-50');
+            addFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', function () { addFiles(this.files); this.value = ''; });
 
-            function addFiles(fileList) {
-                Array.from(fileList).forEach(function (file) {
-                    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-                        showToast('الملف "' + file.name + '" ليس PDF — تم تجاهله', 'red');
-                        return;
-                    }
-                    dataTransfer.items.add(file);
-                });
-                renderChips();
-            }
-
-            function renderChips() {
-                fileChips.innerHTML = '';
-                var files = dataTransfer.files;
-                for (var i = 0; i < files.length; i++) {
-                    (function (file, idx) {
-                        var chip = document.createElement('div');
-                        chip.className = 'file-chip';
-                        var size = file.size > 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.round(file.size / 1024) + ' KB';
-                        chip.innerHTML =
-                            '<div class="fc-icon"><i class="fas fa-file-pdf"></i></div>' +
-                            '<div class="flex-grow-1"><div class="fc-name">' + file.name + '</div><div class="fc-size">' + size + '</div></div>' +
-                            '<button type="button" class="fc-remove" title="إزالة"><i class="fas fa-times"></i></button>';
-                        chip.querySelector('.fc-remove').addEventListener('click', function () {
-                            dataTransfer.items.remove(idx);
-                            renderChips();
-                        });
-                        fileChips.appendChild(chip);
-                    })(files[i], i);
+        function addFiles(fileList) {
+            Array.from(fileList).forEach(function (file) {
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    showWizardToast('الملف "' + file.name + '" ليس PDF — تم تجاهله', 'error');
+                    return;
                 }
-                if (files.length > 0) fileInput.files = dataTransfer.files;
+                dataTransfer.items.add(file);
+            });
+            renderChips();
+        }
+
+        function renderChips() {
+            fileChips.innerHTML = '';
+            var files = dataTransfer.files;
+            for (var i = 0; i < files.length; i++) {
+                (function (file, idx) {
+                    var chip = document.createElement('div');
+                    chip.className = 'flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm';
+                    var size = file.size > 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.round(file.size / 1024) + ' KB';
+                    chip.innerHTML =
+                        '<div class="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600 shrink-0">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
+                        '</div>' +
+                        '<div class="flex-1 min-w-0">' +
+                        '<div class="text-sm font-bold text-slate-700 truncate" dir="ltr" style="text-align:right">' + file.name + '</div>' +
+                        '<div class="text-xs text-slate-400 font-medium mt-0.5">' + size + '</div>' +
+                        '</div>' +
+                        '<button type="button" class="w-7 h-7 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-colors shrink-0 fc-remove" title="إزالة">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
+                        '</button>';
+
+                    chip.querySelector('.fc-remove').addEventListener('click', function () {
+                        dataTransfer.items.remove(idx);
+                        renderChips();
+                    });
+                    fileChips.appendChild(chip);
+                })(files[i], i);
             }
+            if (files.length > 0) fileInput.files = dataTransfer.files;
+        }
 
-            // ── Submit gating & UX ──
-            document.getElementById('wizardForm').addEventListener('submit', function (e) {
-                if (!validateStep(currentStep)) { e.preventDefault(); return; }
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري الحفظ...';
-            });
+        // ── Submit ──
+        document.getElementById('wizardForm').addEventListener('submit', function (e) {
+            if (!validateStep(currentStep)) { e.preventDefault(); return; }
+            submitBtn.disabled = true;
+            submitBtn.innerHTML =
+                '<svg class="animate-spin w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">' +
+                '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>' +
+                '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>' +
+                '</svg>جاري الحفظ…';
+        });
 
-            // close autocomplete on outside click
-            document.addEventListener('click', function (e) {
-                if (!e.target.closest('.position-relative-container')) {
-                    var list = autocompleteEl();
-                    if (list) list.style.display = 'none';
-                }
-            });
-        })();
+        // Close autocomplete on outside click
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('#phone-autocomplete-wrap')) {
+                var list = autocompleteEl();
+                if (list) list.classList.add('hidden');
+            }
+        });
+
+        // Initialize — step 1 active
+        showStep(1);
+        lucide.createIcons();
+    })();
     </script>
 }

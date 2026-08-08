@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace DrMohamedWeb.Core.Entities
 {
@@ -7,6 +8,8 @@ namespace DrMohamedWeb.Core.Entities
     {
         public int Id { get; set; }
         public int PatientId { get; set; }
+
+        [Required(ErrorMessage = "تاريخ الزيارة مطلوب")]
         public DateTime VisitDate { get; set; } = DateTime.Today;
         public string? Notes { get; set; }
         public bool IsAvailable { get; set; } = false;

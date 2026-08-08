@@ -8,10 +8,10 @@ namespace DrMohamedWeb.ViewModels
     {
         public int VisitId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "اسم التحليل مطلوب")]
         public string TestName { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "يرجى اختيار ملف (PDF) واحد على الأقل")]
         public List<IFormFile> Files { get; set; } = new List<IFormFile>();
     }
 }

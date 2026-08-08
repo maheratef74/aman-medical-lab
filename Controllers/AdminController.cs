@@ -90,6 +90,7 @@ namespace DrMohamedWeb.Controllers
                 HiddenVisits = visits.Count(v => !v.IsAvailable)
             };
 
+            // ── 6 months ──
             for (int i = 5; i >= 0; i--)
             {
                 var start = thisMonthStart.AddMonths(-i);
@@ -99,6 +100,33 @@ namespace DrMohamedWeb.Controllers
                 model.PatientsPerMonth.Add(patients.Count(p => p.CreatedAt >= start && p.CreatedAt < end));
                 model.VisitsPerMonth.Add(visits.Count(v => v.VisitDate >= start && v.VisitDate < end));
                 model.ResultsPerMonth.Add(results.Count(r => r.UploadedAt >= start && r.UploadedAt < end));
+            }
+
+            // ── Last 30 days in 5 weekly buckets (W-4, W-3, W-2, W-1, هذا الأسبوع) ──
+            var today = now.Date;
+            var startOf30 = today.AddDays(-29);
+            var arabicWeeks = new[] { "الأسبوع 1", "الأسبوع 2", "الأسبوع 3", "الأسبوع 4", "هذا الأسبوع" };
+            for (int w = 0; w < 5; w++)
+            {
+                var ws = startOf30.AddDays(w * 7);
+                var we = ws.AddDays(7);
+                if (we > today.AddDays(1)) we = today.AddDays(1);
+
+                model.Labels30Days.Add(arabicWeeks[w]);
+                model.Patients30Days.Add(patients.Count(p => p.CreatedAt.Date >= ws && p.CreatedAt.Date < we));
+                model.Visits30Days.Add(visits.Count(v => v.VisitDate.Date >= ws && v.VisitDate.Date < we));
+                model.Results30Days.Add(results.Count(r => r.UploadedAt.Date >= ws && r.UploadedAt.Date < we));
+            }
+
+            // ── Last 7 days daily ──
+            var arabicDays = new[] { "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت" };
+            for (int d = 6; d >= 0; d--)
+            {
+                var day = today.AddDays(-d);
+                model.Labels7Days.Add(arabicDays[(int)day.DayOfWeek]);
+                model.Patients7Days.Add(patients.Count(p => p.CreatedAt.Date == day));
+                model.Visits7Days.Add(visits.Count(v => v.VisitDate.Date == day));
+                model.Results7Days.Add(results.Count(r => r.UploadedAt.Date == day));
             }
 
             model.RecentVisits = await _context.PatientVisits

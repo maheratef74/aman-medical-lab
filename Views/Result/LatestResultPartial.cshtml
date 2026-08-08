@@ -3,185 +3,113 @@
     Layout = null;
 }
 
-<style>
-    .result-container {
-        direction: rtl;
-        max-width: 800px;
-        margin: 0 auto;
-        font-family: 'Tajawal', sans-serif;
-    }
-    .header-card {
-        background: linear-gradient(135deg, #2c3e50, #34495e);
-        color: white;
-        padding: 25px;
-        border-radius: 16px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
-        text-align: right;
-    }
-    .header-card h2 {
-        margin: 0 0 10px 0;
-        font-size: 24px;
-        font-weight: 700;
-    }
-    .header-card p {
-        margin: 5px 0;
-        color: #ecf0f1;
-        font-size: 16px;
-    }
-    .visit-card {
-        background: white;
-        border-radius: 16px;
-        padding: 25px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        margin-bottom: 25px;
-        text-align: right;
-        border: 1px solid #eef2f5;
-    }
-    .visit-date {
-        color: #d5212a;
-        font-weight: 700;
-        font-size: 20px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .test-item {
-        background: #f8f9fa;
-        border-left: 4px solid #d5212a;
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    .test-name {
-        font-size: 18px;
-        font-weight: 600;
-        color: #2c3e50;
-    }
-    .action-buttons {
-        display: flex;
-        gap: 10px;
-    }
-    .btn-custom {
-        padding: 12px 25px;
-        border-radius: 8px;
-        font-weight: 600;
-        text-decoration: none;
-        color: white;
-        transition: all 0.2s;
-        text-align: center;
-        border: none;
-        cursor: pointer;
-    }
-    .btn-view {
-        background: #2ecc71;
-    }
-    .btn-view:hover {
-        background: #27ae60;
-        transform: translateY(-2px);
-        color: white;
-    }
-    .btn-download {
-        background: #d5212a;
-    }
-    .btn-download:hover {
-        background: #b91d31;
-        transform: translateY(-2px);
-        color: white;
-    }
-    .btn-all-visits {
-        display: block;
-        width: 100%;
-        padding: 18px;
-        background: white;
-        color: #2c3e50;
-        border: 2px solid #e0e6ed;
-        border-radius: 12px;
-        font-size: 18px;
-        font-weight: 700;
-        text-align: center;
-        text-decoration: none;
-        transition: all 0.3s;
-    }
-    .btn-all-visits:hover {
-        border-color: #d5212a;
-        color: #d5212a;
-        background: #f8fafc;
-    }
-    .empty-msg {
-        text-align: center;
-        color: #7f8c8d;
-        padding: 20px;
-        font-size: 18px;
-    }
-    @@media (max-width: 600px) {
-        .test-item {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .action-buttons {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-        .btn-custom {
-            width: 100%;
-        }
-    }
-</style>
+<div class="result-container animate-fade-in">
+    <!-- Empathetic greeting card -->
+    <div class="alert border-0 rounded-4 p-4 mb-4 d-flex align-items-start gap-3 shadow-sm" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-right: 5px solid #22c55e !important; text-align: right;">
+        <div class="fs-1 text-success leading-none"><i class="bi bi-heart-pulse-fill"></i></div>
+        <div>
+            <h4 class="fw-black text-success mb-1" style="font-size: 1.25rem;">ألف سلامة عليك يا @Model.PatientName 👋</h4>
+            <p class="mb-0 text-success-emphasis opacity-90 fw-bold" style="font-size: 0.9rem; line-height: 1.6;">
+                معمل أمان يتمنى لك الشفاء العاجل ودوام الصحة والعافية. نتائج تحاليلك جاهزة ومحمية بأمان أدناه.
+            </p>
+        </div>
+    </div>
 
-<div class="result-container">
-    <div class="header-card">
-        <h2>@Model.PatientName</h2>
-        <p><i class="bi bi-telephone-fill me-2"></i>@Model.PhoneNumber</p>
+    <!-- Patient Info Summary Card -->
+    <div class="card border-0 rounded-4 shadow-sm mb-4 overflow-hidden">
+        <div class="card-body p-4 bg-white" style="text-align: right;">
+            <div class="row align-items-center gy-3">
+                <div class="col-sm-6">
+                    <small class="text-muted d-block fw-bold mb-1">اسم المريض</small>
+                    <span class="fs-5 fw-extrabold text-slate-800 d-block">@Model.PatientName</span>
+                </div>
+                <div class="col-sm-6 text-sm-start">
+                    <small class="text-muted d-block fw-bold mb-1">رقم الهاتف</small>
+                    <span class="fs-5 fw-extrabold text-slate-700 dir-ltr d-inline-block">@Model.PhoneNumber</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     @if (Model.LatestVisit != null)
     {
-        <div class="visit-card">
-            <div class="visit-date">
-                <i class="bi bi-calendar-check me-2"></i>
-                زيارة بتاريخ: @Model.LatestVisit.VisitDate.ToString("yyyy/MM/dd")
+        <div class="card border-0 rounded-4 shadow-sm mb-4 overflow-hidden">
+            <!-- Header for Latest Visit -->
+            <div class="px-4 py-3 bg-light border-bottom border-light-subtle d-flex align-items-center justify-content-between flex-wrap gap-2" style="text-align: right;">
+                <span class="fw-bold text-dark d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-calendar2-check text-success"></i>
+                    زيارة بتاريخ: <span class="text-success fw-extrabold">@Model.LatestVisit.VisitDate.ToString("yyyy/MM/dd")</span>
+                </span>
+                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 fw-bold text-xs">آخر زيارة</span>
             </div>
 
-            @if (!string.IsNullOrWhiteSpace(Model.LatestVisit.Notes))
-            {
-                <p style="color: #666; margin-bottom: 20px;">@Model.LatestVisit.Notes</p>
-            }
+            <div class="card-body p-4 bg-white" style="text-align: right;">
+                @if (!string.IsNullOrWhiteSpace(Model.LatestVisit.Notes))
+                {
+                    <div class="p-3 rounded-3 bg-light border-0 mb-4 text-slate-600 font-semibold" style="font-size: 0.9rem; border-right: 4px solid #cbd5e1 !important;">
+                        <i class="bi bi-info-circle me-1 text-slate-500"></i> ملاحظات الطبيب: @Model.LatestVisit.Notes
+                    </div>
+                }
 
-            @if (Model.LatestVisit.TestResults.Any())
-            {
-                <div class="tests-list">
-                    @foreach (var test in Model.LatestVisit.TestResults)
-                    {
-                        <div class="test-item">
-                            <div class="test-name">@test.TestName</div>
-                            <div class="action-buttons">
-                                <a href="@Url.Content("~/" + test.FilePath.TrimStart('/'))" target="_blank" class="btn-custom btn-view">
-                                    <i class="bi bi-eye-fill me-1"></i> عرض
-                                </a>
-                                <a asp-action="Download" asp-controller="Result" asp-route-id="@test.Id" class="btn-custom btn-download">
-                                    <i class="bi bi-download me-1"></i> تحميل
-                                </a>
+                @if (Model.LatestVisit.TestResults.Any())
+                {
+                    <div class="space-y-3">
+                        @foreach (var test in Model.LatestVisit.TestResults)
+                        {
+                            <div class="d-flex align-items-center justify-content-between p-3 rounded-4 bg-light border-0 hover-lift transition-all" style="border: 1px solid #f1f5f9 !important;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="w-10 h-10 rounded-3 bg-success-subtle text-success d-flex align-items-center justify-center fs-4 shrink-0">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="fw-extrabold text-slate-800 d-block truncate" style="font-size: 0.95rem;">@test.TestName</span>
+                                        <small class="text-muted fw-semibold">صيغة الملف: PDF</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="@Url.Content("~/" + test.FilePath.TrimStart('/'))" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold">
+                                        <i class="bi bi-eye-fill me-1"></i> عرض
+                                    </a>
+                                    <a asp-action="Download" asp-controller="Result" asp-route-id="@test.Id" class="btn btn-success btn-sm rounded-pill px-3 fw-bold" style="background-color: #198754; border-color: #198754;">
+                                        <i class="bi bi-download me-1"></i> تحميل
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="empty-msg">لا توجد تحاليل لهذه الزيارة</div>
-            }
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-file-earmark-x fs-2 d-block mb-2 text-slate-300"></i>
+                        <span class="fw-bold" style="font-size: 0.95rem;">لم يتم رفع ملف النتيجة لهذه الزيارة بعد</span>
+                    </div>
+                }
+            </div>
         </div>
     }
 
-    <button type="button" id="loadAllVisitsBtn" data-phone="@Model.PhoneNumber" class="btn-all-visits border-0">
-        <i class="bi bi-clock-history me-2"></i> عرض الزيارات السابقة
+    <!-- View previous visits button -->
+    <button type="button" id="loadAllVisitsBtn" data-phone="@Model.PhoneNumber" class="btn btn-outline-success w-100 rounded-4 py-3 fw-bold text-center border-2 d-flex align-items-center justify-content-center gap-2 hover:bg-success hover:text-white transition-all" style="color: #198754; border-color: #198754;">
+        <i class="bi bi-clock-history"></i>
+        <span>عرض جميع الزيارات السابقة للمريض</span>
     </button>
 </div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(15,23,42,.05);
+        background-color: #fdfdfd !important;
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

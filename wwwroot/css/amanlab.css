@@ -17,15 +17,23 @@ body {
 }
 
 /* ───────────────────────── Navbar ───────────────────────── */
+#mainNav {
+    background: transparent;
+    box-shadow: none;
+    transition: all .3s ease-in-out;
+}
+
 .navbar-brand-custom {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #d5212a !important;
+    color: #fff !important;
     letter-spacing: .02em;
+    transition: color 0.3s;
 }
 
 .navbar-brand-custom span {
-    color: #198754
+    color: #a7f3d0 !important; /* light green */
+    transition: color 0.3s;
 }
 
 .navbar-brand-custom img {
@@ -37,7 +45,7 @@ body {
 
 .nav-link-custom {
     font-weight: 600;
-    color: #1e293b !important;
+    color: rgba(255, 255, 255, 0.9) !important;
     padding: .4rem .75rem !important;
     border-radius: 8px;
     transition: all .25s;
@@ -45,16 +53,42 @@ body {
 
 .nav-link-custom:hover,
 .nav-link-custom.active {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+#mainNav .navbar-toggler {
+    filter: invert(1) brightness(100);
+}
+
+/* Scrolled Navbar State */
+#mainNav.scrolled {
+    background: #ffffffee !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 16px rgba(213, 33, 42, .08);
+}
+
+#mainNav.scrolled .navbar-brand-custom {
+    color: #d5212a !important;
+}
+
+#mainNav.scrolled .navbar-brand-custom span {
+    color: #198754 !important;
+}
+
+#mainNav.scrolled .nav-link-custom {
+    color: #1e293b !important;
+}
+
+#mainNav.scrolled .nav-link-custom:hover,
+#mainNav.scrolled .nav-link-custom.active {
     color: #d5212a !important;
     background: rgba(213, 33, 42, .08);
 }
 
-#mainNav {
-    background: #ffffffee;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 2px 16px rgba(213, 33, 42, .08);
-    transition: all .3s;
+#mainNav.scrolled .navbar-toggler {
+    filter: none;
 }
 
 /* ───────────────────────── Hero ───────────────────────── */
@@ -73,9 +107,8 @@ body {
     #hero {
         min-height: 100svh;
         background:
-            linear-gradient(rgba(90, 8, 8, .38), rgba(150, 16, 16, .38)),
-            url('https://www.shorouknews.com/uploadedimages/Sections/Egypt/original/kR0RyAv4sy-1.jpg') center center / cover no-repeat;
-        background-size: cover;
+            linear-gradient(rgba(90, 8, 8, .5), rgba(150, 16, 16, .5)),
+            url('/images/hero-image.jpg') center center / cover no-repeat;
         background-attachment: scroll;
     }
 }
@@ -379,7 +412,7 @@ footer a:hover {
 /* ───────────────────────── WhatsApp FAB ───────────────────────── */
 .whatsapp-fab {
     position: fixed;
-    bottom: 24px;
+    bottom: 130px;
     left: 24px;
     width: 62px;
     height: 62px;

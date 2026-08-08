@@ -3,125 +3,331 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <title>@ViewData["Title"] — معمل أمان</title>
+    <link rel="icon" type="image/jpeg" href="~/images/aman-logo.jpg" />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cairo: ["'Cairo'", 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50:  '#fef2f2',
+                            100: '#fde8e8',
+                            200: '#fcd4d4',
+                            300: '#f9a8a8',
+                            400: '#f47171',
+                            500: '#ea4444',
+                            600: '#d5212a',
+                            700: '#b91c2c',
+                            800: '#991b1b',
+                            900: '#7f1d1d',
+                        },
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.06)',
+                        'card-hover': '0 4px 8px rgba(15,23,42,.08), 0 12px 28px rgba(15,23,42,.10)',
+                        'sidebar': '2px 0 16px rgba(15,23,42,.10)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts — Cairo (Arabic) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
     <style>
-        body {
-            background-color: #f8f9fa;
+        * { font-family: 'Cairo', sans-serif; }
+
+        /* Sidebar transition */
+        #admin-sidebar {
+            transition: transform 0.3s cubic-bezier(.4,0,.2,1);
         }
-        #wrapper {
-            display: flex;
-            width: 100%;
-            align-items: stretch;
+        #sidebar-overlay {
+            transition: opacity 0.3s ease;
         }
-        #sidebar {
-            min-width: 250px;
-            max-width: 250px;
-            background: #2c3e50;
+
+        /* Active nav item */
+        .nav-link-active {
+            background-color: #fef2f2;
+            color: #b91c2c !important;
+            font-weight: 700;
+        }
+        .nav-link-active .nav-icon-wrap {
+            background-color: #b91c2c;
             color: #fff;
-            transition: all 0.3s;
-            min-height: 100vh;
         }
-        #sidebar.active {
-            margin-right: -250px;
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Toast animation */
+        @@keyframes slideInRight {
+            from { opacity: 0; transform: translateX(60px); }
+            to   { opacity: 1; transform: translateX(0); }
         }
-        #sidebar .sidebar-header {
-            padding: 20px;
-            background: #1a252f;
+        .toast-enter { animation: slideInRight 0.35s ease forwards; }
+
+        /* Page enter */
+        @@keyframes pageFadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        #sidebar ul.components {
-            padding: 20px 0;
+        .page-content { animation: pageFadeUp 0.4s ease forwards; }
+
+        /* Table rows */
+        tbody tr { transition: background-color 0.15s; }
+
+        /* Form focus ring */
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #d5212a !important;
+            box-shadow: 0 0 0 3px rgba(213,33,42,.12);
         }
-        #sidebar ul p {
-            color: #fff;
-            padding: 10px;
+
+        /* Progress bar stripe */
+        @@keyframes stripeMove {
+            from { background-position: 0 0; }
+            to   { background-position: 40px 0; }
         }
-        #sidebar ul li a {
-            padding: 10px 20px;
-            font-size: 1.1em;
-            display: block;
-            color: #ecf0f1;
-            text-decoration: none;
-        }
-        #sidebar ul li a:hover {
-            color: #2c3e50;
-            background: #ecf0f1;
-        }
-        #content {
-            width: 100%;
-            padding: 20px;
-            min-height: 100vh;
-            transition: all 0.3s;
+        .progress-stripe {
+            background-image: linear-gradient(
+                45deg,
+                rgba(255,255,255,.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255,255,255,.15) 50%,
+                rgba(255,255,255,.15) 75%,
+                transparent 75%
+            );
+            background-size: 40px 40px;
+            animation: stripeMove 1s linear infinite;
         }
     </style>
 </head>
-<body>
-    <div id="wrapper">
-        <!-- Sidebar  -->
-        <nav id="sidebar">
-            <div class="sidebar-header d-flex justify-content-between align-items-center">
-                <h3 class="d-flex align-items-center gap-2 mb-0">
-                    <img src="~/images/aman-logo.jpg" alt="معمل أمان" style="width:38px;height:38px;border-radius:10px;object-fit:cover;" />
-                    معمل أمان
-                </h3>
-                <button type="button" id="sidebarCollapseInside" class="btn btn-outline-light btn-sm d-md-none">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+<body class="bg-slate-50 text-slate-800 antialiased">
 
-            <ul class="list-unstyled components">
-                <li>
-                    <a asp-controller="Admin" asp-action="Dashboard"><i class="fas fa-home me-2"></i> لوحة التحكم</a>
-                </li>
-                <li>
-                    <a asp-controller="Patients" asp-action="Index"><i class="fas fa-users me-2"></i> المرضى</a>
-                </li>
-                <li>
-                    <a asp-controller="Patients" asp-action="Create"><i class="fas fa-user-plus me-2"></i> إضافة مريض</a>
-                </li>
-                <li>
-                    <a asp-controller="Visits" asp-action="AddVisit"><i class="fas fa-wand-magic-sparkles me-2"></i> إضافة مريض / زيارة ونتائج</a>
-                </li>
-                <li>
-                    <form asp-controller="Admin" asp-action="Logout" method="post" class="d-inline border-0 p-0 m-0">
-                        <button type="submit" class="btn btn-link text-start text-white text-decoration-none w-100" style="padding: 10px 20px; font-size: 1.1em;">
-                            <i class="fas fa-sign-out-alt me-2"></i> تسجيل الخروج
-                        </button>
-                    </form>
-                </li>
-            </ul>
-        </nav>
-
-        <!-- Page Content  -->
-        <div id="content">
-            <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
-                <div class="container-fluid">
-                    <button type="button" id="sidebarCollapse" class="btn btn-danger">
-                        <i class="fas fa-align-right"></i>
-                        <span>تبديل القائمة</span>
-                    </button>
-                    <div class="ms-auto fw-bold text-danger">
-                        لوحة تحكم الإدارة
-                    </div>
-                </div>
-            </nav>
-
-            <main role="main">
-                @RenderBody()
-            </main>
-        </div>
+    <!-- ═══════════════════════════════════════
+         MOBILE OVERLAY
+    ═══════════════════════════════════════ -->
+    <div id="sidebar-overlay"
+         class="fixed inset-0 bg-slate-900/50 z-30 opacity-0 pointer-events-none lg:hidden"
+         onclick="closeSidebar()">
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ═══════════════════════════════════════
+         SIDEBAR
+    ═══════════════════════════════════════ -->
+    <aside id="admin-sidebar"
+           class="fixed top-0 right-0 h-full w-64 bg-white border-l border-slate-100 shadow-sidebar z-40 flex flex-col -translate-x-full lg:translate-x-0">
+
+        <!-- Logo -->
+        <div class="flex items-center gap-3 px-5 py-5 border-b border-slate-100">
+            <img src="~/images/aman-logo.jpg" alt="معمل أمان" class="w-9 h-9 rounded-xl object-cover shadow-sm shrink-0" />
+            <div>
+                <div class="font-extrabold text-slate-800 text-base leading-tight">معمل أمان</div>
+                <div class="text-xs text-slate-400 font-medium">لوحة الإدارة</div>
+            </div>
+            <!-- Mobile close -->
+            <button onclick="closeSidebar()"
+                    class="mr-auto p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors lg:hidden">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">القائمة الرئيسية</p>
+
+            @{
+                var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+                var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+                bool isDashboard = currentController == "Admin" && currentAction == "Dashboard";
+                bool isPatientsList = currentController == "Patients" && currentAction == "Index";
+                bool isCreatePatient = currentController == "Patients" && currentAction == "Create";
+                bool isVisitFlow = currentController == "Visits" && currentAction == "AddVisit";
+            }
+
+            <a asp-controller="Admin" asp-action="Dashboard"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all duration-150 group @(isDashboard ? "nav-link-active" : "")">
+                <span class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center @(isDashboard ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200") transition-all">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                </span>
+                <span class="text-sm font-semibold">لوحة التحكم</span>
+            </a>
+
+            <a asp-controller="Patients" asp-action="Index"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all duration-150 group @(isPatientsList ? "nav-link-active" : "")">
+                <span class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center @(isPatientsList ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200") transition-all">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                </span>
+                <span class="text-sm font-semibold">المرضى</span>
+            </a>
+
+            <a asp-controller="Patients" asp-action="Create"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all duration-150 group @(isCreatePatient ? "nav-link-active" : "")">
+                <span class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center @(isCreatePatient ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200") transition-all">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                </span>
+                <span class="text-sm font-semibold">إضافة مريض</span>
+            </a>
+
+            <a asp-controller="Visits" asp-action="AddVisit"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all duration-150 group @(isVisitFlow ? "nav-link-active" : "")">
+                <span class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center @(isVisitFlow ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200") transition-all">
+                    <i data-lucide="flask-conical" class="w-4 h-4"></i>
+                </span>
+                <span class="text-sm font-semibold">زيارة ونتائج</span>
+                <span class="mr-auto text-xs font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded-md">جديد</span>
+            </a>
+        </nav>
+
+        <!-- Sidebar Bottom: Logout -->
+        <div class="px-3 py-4 border-t border-slate-100">
+            <form asp-controller="Admin" asp-action="Logout" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-slate-500 hover:bg-red-50 hover:text-brand-700 transition-all duration-150 group">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 group-hover:bg-red-100 transition-all">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </span>
+                    <span class="text-sm font-semibold">تسجيل الخروج</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- ═══════════════════════════════════════
+         MAIN WRAPPER (offset by sidebar on desktop)
+    ═══════════════════════════════════════ -->
+    <div class="lg:mr-64 min-h-screen flex flex-col">
+
+        <!-- ═══════ TOPBAR ═══════ -->
+        <header class="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-slate-100">
+            <div class="flex items-center gap-4 px-4 sm:px-6 h-16">
+
+                <!-- Mobile hamburger -->
+                <button onclick="openSidebar()"
+                        class="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Page title + breadcrumb -->
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-base font-bold text-slate-800 truncate">@ViewData["Title"]</h1>
+                    @if (ViewData["Breadcrumb"] != null)
+                    {
+                        <p class="text-xs text-slate-400 mt-0.5">@ViewData["Breadcrumb"]</p>
+                    }
+                </div>
+
+                <!-- Topbar actions -->
+                <div class="flex items-center gap-2">
+                    <!-- Notification bell -->
+                    <button class="relative p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-600 rounded-full"></span>
+                    </button>
+
+                    <!-- Divider -->
+                    <div class="w-px h-6 bg-slate-200 mx-1"></div>
+
+                    <!-- User avatar -->
+                    <div class="flex items-center gap-2.5 cursor-pointer group">
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-600 to-brand-900 flex items-center justify-center text-white font-bold text-sm shadow-sm shadow-brand-600/30">
+                            م
+                        </div>
+                        <div class="hidden sm:block">
+                            <div class="text-sm font-bold text-slate-700 leading-tight">الإدارة</div>
+                            <div class="text-xs text-slate-400">مدير النظام</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ═══════ PAGE CONTENT ═══════ -->
+        <main class="flex-1 px-4 sm:px-6 py-6 page-content" role="main">
+            @RenderBody()
+        </main>
+
+        <!-- ═══════ FOOTER ═══════ -->
+        <footer class="px-6 py-4 border-t border-slate-100 bg-white">
+            <p class="text-xs text-slate-400 text-center">
+                © 2026 معمل أمان للتحاليل الطبية — جميع الحقوق محفوظة
+            </p>
+        </footer>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         SCRIPTS
+    ═══════════════════════════════════════ -->
     <script>
-        $(document).ready(function () {
-            $('#sidebarCollapse, #sidebarCollapseInside').on('click', function () {
-                $('#sidebar').toggleClass('active');
-            });
-        });
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Sidebar open/close
+        function openSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+            overlay.classList.add('opacity-100');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            overlay.classList.remove('opacity-100');
+            document.body.style.overflow = '';
+        }
+
+        // Toast notifications
+        window.showToast = function(message, type = 'success') {
+            const colors = {
+                success: 'bg-green-600',
+                error:   'bg-red-600',
+                warning: 'bg-amber-500',
+                info:    'bg-blue-600',
+            };
+            const icons = {
+                success: 'check-circle',
+                error:   'x-circle',
+                warning: 'alert-triangle',
+                info:    'info',
+            };
+            const toast = document.createElement('div');
+            toast.className = `toast-enter fixed bottom-6 left-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl text-white text-sm font-semibold shadow-xl ${colors[type] || colors.success}`;
+            toast.innerHTML = `<i data-lucide="${icons[type] || 'check-circle'}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(60px)'; toast.style.transition = 'all 0.3s ease'; }, 3000);
+            setTimeout(() => toast.remove(), 3350);
+        };
+
+        // Re-init lucide after any dynamic content
+        document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
     </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

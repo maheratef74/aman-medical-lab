@@ -93,11 +93,28 @@ namespace DrMohamedWeb.Controllers
             {
                 int patientId = _context.PatientVisits.Find(testResult.VisitId)?.PatientId ?? 0;
                 
-                // Note: Consider deleting the physical file here if required.
+                // Physically delete the PDF file if it exists on the server
+                if (!string.IsNullOrEmpty(testResult.FilePath))
+                {
+                    var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    var filePhysicalPath = Path.Combine(webRootPath, testResult.FilePath.TrimStart('/'));
+                    if (System.IO.File.Exists(filePhysicalPath))
+                    {
+                        try
+                        {
+                            System.IO.File.Delete(filePhysicalPath);
+                        }
+                        catch (IOException)
+                        {
+                            // Log or handle file in use gracefully
+                        }
+                    }
+                }
 
                 _context.TestResults.Remove(testResult);
                 await _context.SaveChangesAsync();
                 
+                TempData["Success"] = "تم حذف نتيجة التحليل والملف بنجاح ✓";
                 return RedirectToAction("Index", "Visits", new { patientId = patientId });
             }
             return NotFound();
