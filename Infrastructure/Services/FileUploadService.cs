@@ -26,9 +26,9 @@ namespace DrMohamedWeb.Infrastructure.Services
 
             var year = DateTime.Now.Year.ToString();
             var month = DateTime.Now.Month.ToString("D2");
-            var folderName = Path.Combine("results", year, month);
+            var folderRelative = $"results/{year}/{month}";
             var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var pathToSave = Path.Combine(webRoot, folderName);
+            var pathToSave = Path.Combine(webRoot, "results", year, month);
 
             if (!Directory.Exists(pathToSave))
             {
@@ -44,7 +44,7 @@ namespace DrMohamedWeb.Infrastructure.Services
             }
 
             // Return relative path for database storage
-            return $"/{folderName.Replace("\\", "/")}/{fileName}";
+            return $"/{folderRelative}/{fileName}";
         }
     }
 }

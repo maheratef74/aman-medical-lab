@@ -1,5 +1,5 @@
 /* معمل أمان — Service Worker */
-const CACHE_NAME = 'amanlab-v4';
+const CACHE_NAME = 'amanlab-v6';
 const CORE_ASSETS = [
     '/',
     '/manifest.webmanifest',
@@ -8,7 +8,9 @@ const CORE_ASSETS = [
     '/images/aman-logo.png',
     '/images/app-icon.jpeg',
     '/icons/icon-192.png',
-    '/icons/icon-512.png'
+    '/icons/icon-512.png',
+    '/icons/icon-maskable-192.png',
+    '/icons/icon-maskable-512.png'
 ];
 
 self.addEventListener('install', function (event) {

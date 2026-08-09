@@ -518,7 +518,7 @@ textarea:focus {
     min-width: 52px;
     border-radius: 14px;
     object-fit: cover;
-    box-shadow: 0 4px 12px rgba(213, 33, 42, .25);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .12);
 }
 
 .pwa-install-card .pwa-text {
