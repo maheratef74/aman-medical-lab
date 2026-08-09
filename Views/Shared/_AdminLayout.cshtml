@@ -60,22 +60,37 @@
     <style>
         * { font-family: 'Cairo', sans-serif; }
 
-        /* Sidebar transition */
+        /* Sidebar transition & RTL positioning */
         #admin-sidebar {
             transition: transform 0.3s cubic-bezier(.4,0,.2,1);
         }
         #main-wrapper {
             transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
         }
-        .sidebar-collapsed #admin-sidebar {
-            transform: translateX(100%) !important;
-            right: -320px !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
+
+        /* Desktop rules (>= 1024px) */
+        @@media (min-width: 1024px) {
+            #admin-sidebar {
+                transform: translateX(0);
+            }
+            .sidebar-collapsed #admin-sidebar {
+                transform: translateX(100%) !important;
+            }
+            .sidebar-collapsed #main-wrapper {
+                margin-right: 0 !important;
+            }
         }
-        .sidebar-collapsed #main-wrapper {
-            margin-right: 0 !important;
+
+        /* Mobile rules (< 1024px) */
+        @@media (max-width: 1023.98px) {
+            #admin-sidebar {
+                transform: translateX(100%);
+            }
+            #admin-sidebar.sidebar-mobile-open {
+                transform: translateX(0) !important;
+            }
         }
+
         #sidebar-overlay {
             transition: opacity 0.3s ease;
         }
@@ -155,7 +170,7 @@
          SIDEBAR
     ═══════════════════════════════════════ -->
     <aside id="admin-sidebar"
-           class="fixed top-0 right-0 h-full w-64 bg-white border-l border-slate-100 shadow-sidebar z-40 flex flex-col -translate-x-full lg:translate-x-0">
+           class="fixed top-0 right-0 h-full w-64 bg-white border-l border-slate-100 shadow-sidebar z-40 flex flex-col">
 
         <!-- Logo -->
         <div class="flex items-center gap-3 px-5 py-5 border-b border-slate-100">
@@ -322,10 +337,10 @@
             const sidebar = document.getElementById('admin-sidebar');
             
             if (isMobile) {
-                if (sidebar.classList.contains('-translate-x-full')) {
-                    openSidebar();
-                } else {
+                if (sidebar.classList.contains('sidebar-mobile-open')) {
                     closeSidebar();
+                } else {
+                    openSidebar();
                 }
             } else {
                 const body = document.body;
@@ -346,7 +361,7 @@
         function openSidebar() {
             const sidebar = document.getElementById('admin-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('sidebar-mobile-open');
             overlay.classList.remove('opacity-0', 'pointer-events-none');
             overlay.classList.add('opacity-100');
             document.body.style.overflow = 'hidden';
@@ -355,7 +370,7 @@
         function closeSidebar() {
             const sidebar = document.getElementById('admin-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('sidebar-mobile-open');
             overlay.classList.add('opacity-0', 'pointer-events-none');
             overlay.classList.remove('opacity-100');
             document.body.style.overflow = '';

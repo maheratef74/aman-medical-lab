@@ -6,14 +6,22 @@
 }
 
 html {
-    scroll-behavior: smooth
+    scroll-behavior: smooth;
+    height: 100%;
+    background-color: #d5212a !important;
 }
 
 body {
     font-family: 'Cairo', sans-serif;
-    background: #fff;
+    background-color: #d5212a !important;
     color: #1e293b;
     direction: rtl;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
 }
 
 /* ───────────────────────── Navbar ───────────────────────── */
@@ -82,7 +90,8 @@ body {
 
 /* ───────────────────────── Hero ───────────────────────── */
 #hero {
-    min-height: 100vh;
+    min-height: 70vh;
+    padding: 110px 0 70px 0;
     background:
         linear-gradient(rgba(90, 8, 8, .38), rgba(150, 16, 16, .38)),
         url('https://www.shorouknews.com/uploadedimages/Sections/Egypt/original/kR0RyAv4sy-1.jpg') center center / cover no-repeat;
@@ -94,7 +103,8 @@ body {
 
 @media (max-width: 768px) {
     #hero {
-        min-height: 100svh;
+        min-height: 65vh;
+        padding: 95px 0 50px 0;
         background:
             linear-gradient(rgba(90, 8, 8, .5), rgba(150, 16, 16, .5)),
             url('/images/hero-image.jpg') center center / cover no-repeat;
@@ -381,11 +391,16 @@ section {
     border: 2px solid #fecaca;
 }
 
+#contact {
+    padding-bottom: 30px !important;
+}
+
 /* ───────────────────────── Footer ───────────────────────── */
 footer {
+    margin-top: auto !important;
     background: linear-gradient(135deg, #7f1d1d, #d5212a);
     color: rgba(255, 255, 255, .85);
-    padding: 2rem 0;
+    padding: 2.5rem 0 3rem 0;
     font-size: .9rem;
 }
 
