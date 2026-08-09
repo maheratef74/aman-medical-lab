@@ -155,7 +155,14 @@
                                                     </div>
                                                     <div class="truncate text-right">
                                                         <p class="text-sm font-bold text-slate-800 truncate" title="@test.TestName">@test.TestName</p>
-                                                        <p class="text-[10px] text-slate-400 font-medium">@test.UploadedAt.ToString("yyyy-MM-dd HH:mm")</p>
+                                                        <p class="text-xs font-medium text-slate-500">
+                                                            @{
+                                                                var fileTimeStr = test.UploadedAt.ToString("hh:mm");
+                                                                var filePeriod = test.UploadedAt.ToString("tt") == "AM" ? "ص" : "م";
+                                                                var fileDate = test.UploadedAt.ToString("yyyy-MM-dd");
+                                                            }
+                                                            <span dir="ltr" class="font-mono text-slate-700">@fileTimeStr</span> <span class="text-slate-700 font-bold">@filePeriod</span> <span class="text-slate-400 text-[10px] mr-1">@fileDate</span>
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-1 shrink-0">
