@@ -12,6 +12,7 @@ namespace DrMohamedWeb.Infrastructure.Data
         public DbSet<Patient> Patients { get; set; }
         public DbSet<PatientVisit> PatientVisits { get; set; }
         public DbSet<TestResult> TestResults { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,3 +1,4 @@
+using DrMohamedWeb.Application.Interfaces;
 using DrMohamedWeb.Infrastructure.Data;
 using DrMohamedWeb.ViewModels;
 using Microsoft.AspNetCore.Authentication;
@@ -18,10 +19,12 @@ namespace DrMohamedWeb.Controllers
         };
 
         private readonly AmanDbContext _context;
+        private readonly ITokenService _tokenService;
 
-        public AdminController(AmanDbContext context)
+        public AdminController(AmanDbContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
         [HttpGet]
@@ -51,7 +54,8 @@ namespace DrMohamedWeb.Controllers
 
                 var authProperties = new AuthenticationProperties
                 {
-                    IsPersistent = true
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(15)
                 };
 
                 await HttpContext.SignInAsync(
@@ -59,11 +63,106 @@ namespace DrMohamedWeb.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
+                // Generate JWT Access Token (15m) & Refresh Token (7d)
+                var accessToken = _tokenService.GenerateAccessToken(email, "Admin");
+                var refreshToken = _tokenService.GenerateRefreshToken();
+                await _tokenService.SaveRefreshTokenAsync(email, refreshToken);
+
+                // Set HttpOnly Cookies
+                Response.Cookies.Append("X-Access-Token", accessToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+                });
+
+                Response.Cookies.Append("X-Refresh-Token", refreshToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddDays(7)
+                });
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" || Request.Headers.Accept.ToString().Contains("application/json"))
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        accessToken = accessToken,
+                        refreshToken = refreshToken,
+                        expiresIn = 900,
+                        redirectUrl = Url.Action("Dashboard", "Admin")
+                    });
+                }
+
                 return RedirectToAction("Dashboard");
+            }
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" || Request.Headers.Accept.ToString().Contains("application/json"))
+            {
+                return Unauthorized(new { success = false, message = "Invalid login attempt." });
             }
 
             ViewBag.Error = "Invalid login attempt.";
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestModel? model)
+        {
+            var refreshToken = model?.RefreshToken ?? Request.Cookies["X-Refresh-Token"];
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Unauthorized(new { success = false, message = "Refresh token is missing." });
+            }
+
+            var result = await _tokenService.RefreshTokensAsync(refreshToken);
+
+            if (result == null)
+            {
+                Response.Cookies.Delete("X-Access-Token");
+                Response.Cookies.Delete("X-Refresh-Token");
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return Unauthorized(new { success = false, message = "Invalid or expired refresh token." });
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "admin@amanlab.com"),
+                new Claim(ClaimTypes.Role, "Admin")
+            };
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                new AuthenticationProperties { IsPersistent = true, ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(15) });
+
+            Response.Cookies.Append("X-Access-Token", result.Value.newAccessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+            });
+
+            Response.Cookies.Append("X-Refresh-Token", result.Value.newRefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
+            });
+
+            return Ok(new
+            {
+                success = true,
+                accessToken = result.Value.newAccessToken,
+                refreshToken = result.Value.newRefreshToken,
+                expiresIn = 900
+            });
         }
 
         [Authorize]

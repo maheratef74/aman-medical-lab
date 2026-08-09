@@ -9,7 +9,7 @@
     <!-- PWA Settings -->
     <link rel="manifest" href="~/admin-manifest.webmanifest" />
     <meta name="theme-color" content="#d5212a" />
-    <link rel="apple-touch-icon" href="~/images/app-icon.jpeg" />
+    <link rel="apple-touch-icon" href="~/icons/icon-180.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -407,6 +407,68 @@
                     deferredPrompt = null;
                 });
             });
+        })();
+
+        // ══════════════════ Silent 401 JWT Refresh Interceptor ══════════════════
+        (function () {
+            let isRefreshing = false;
+            let refreshSubscribers = [];
+
+            function onRefreshed(success) {
+                refreshSubscribers.forEach(cb => cb(success));
+                refreshSubscribers = [];
+            }
+
+            async function performSilentRefresh() {
+                try {
+                    const response = await fetch('/Admin/RefreshToken', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data && data.success;
+                    }
+                } catch (e) {
+                    console.error('Silent refresh failed:', e);
+                }
+                return false;
+            }
+
+            const originalFetch = window.fetch;
+            window.fetch = async function (...args) {
+                let response = await originalFetch.apply(this, args);
+
+                if (response.status === 401 && !args[0].toString().includes('/Admin/RefreshToken') && !args[0].toString().includes('/Admin/Login')) {
+                    if (!isRefreshing) {
+                        isRefreshing = true;
+                        const success = await performSilentRefresh();
+                        isRefreshing = false;
+                        onRefreshed(success);
+
+                        if (success) {
+                            return originalFetch.apply(this, args);
+                        } else {
+                            window.location.href = '/Admin/Login';
+                            return response;
+                        }
+                    } else {
+                        return new Promise(resolve => {
+                            refreshSubscribers.push(async (success) => {
+                                if (success) {
+                                    resolve(await originalFetch.apply(this, args));
+                                } else {
+                                    window.location.href = '/Admin/Login';
+                                    resolve(response);
+                                }
+                            });
+                        });
+                    }
+                }
+
+                return response;
+            };
         })();
     </script>
 

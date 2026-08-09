@@ -239,6 +239,29 @@ namespace DrMohamedWeb.Controllers
             return RedirectToAction(nameof(DoctorVisits), new { date = filterDate });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> QuickAddVisitFromDoctor(int patientId, DateTime visitDate, string notes, bool isAvailable, string filterDate)
+        {
+            if (patientId > 0)
+            {
+                var visit = new PatientVisit
+                {
+                    PatientId = patientId,
+                    VisitDate = visitDate,
+                    Notes = notes,
+                    IsAvailable = isAvailable
+                };
+                
+                _context.PatientVisits.Add(visit);
+                await _context.SaveChangesAsync();
+                
+                TempData["Success"] = "تم إضافة الزيارة بنجاح ✓";
+            }
+            
+            return RedirectToAction(nameof(DoctorVisits), new { date = filterDate });
+        }
+
         [HttpGet]
         public IActionResult AddVisit()
         {

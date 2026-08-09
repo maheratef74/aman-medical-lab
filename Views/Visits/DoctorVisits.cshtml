@@ -20,12 +20,18 @@
             </div>
         </div>
 
-        <form method="get" asp-action="DoctorVisits" class="flex items-center gap-2">
-            <input type="date" name="date" value="@filterDate" class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-slate-700 font-medium" onchange="this.form.submit()" />
-            <button type="submit" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg transition-colors">
-                <i data-lucide="filter" class="w-4 h-4"></i>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="openQuickAddVisitModal()" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm shadow-brand-600/20">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                إضافة زيارة
             </button>
-        </form>
+            <form method="get" asp-action="DoctorVisits" class="flex items-center gap-2">
+                <input type="date" name="date" value="@filterDate" class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-slate-700 font-medium" onchange="this.form.submit()" />
+                <button type="submit" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg transition-colors">
+                    <i data-lucide="filter" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Alert -->
@@ -63,7 +69,20 @@
                     {
                         <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="toggleDetails('details-@visit.Id')">
                             <td class="px-5 py-3 font-bold text-slate-700">@visit.Patient?.Name</td>
-                            <td class="px-5 py-3 font-medium text-slate-500">@(visit.Patient?.PhoneNumber ?? "—")</td>
+                            <td class="px-5 py-3 font-medium" onclick="event.stopPropagation()">
+                                @if (!string.IsNullOrEmpty(visit.Patient?.PhoneNumber))
+                                {
+                                    var waNumber = visit.Patient.PhoneNumber.StartsWith("0") ? "2" + visit.Patient.PhoneNumber : visit.Patient.PhoneNumber;
+                                    <a href="https://wa.me/@waNumber" target="_blank" title="مراسلة عبر واتساب" class="inline-flex items-center gap-1.5 text-green-700 hover:text-green-800 transition-colors bg-green-100 hover:bg-green-200 px-2.5 py-1 rounded-lg">
+                                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                        <span dir="ltr" class="font-bold text-xs">@visit.Patient.PhoneNumber</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-slate-500">—</span>
+                                }
+                            </td>
                             <td class="px-5 py-3 font-medium text-slate-500">
                                 <div class="text-xs text-slate-400">@visit.VisitDate.ToString("yyyy-MM-dd")</div>
                                 <div>@visit.VisitDate.ToString("hh:mm tt")</div>
@@ -164,6 +183,89 @@
                 </div>
             </div>
         }
+    </div>
+</div>
+
+<!-- Quick Add Visit Modal -->
+<div id="quickAddVisitModal" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeQuickAddVisitModal()"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 relative z-10 transform scale-95 transition-transform duration-300 overflow-hidden" id="quickAddVisitModalContent">
+        
+        <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="font-bold text-slate-800">إضافة زيارة سريعة</h3>
+            <button onclick="closeQuickAddVisitModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form asp-controller="Visits" asp-action="QuickAddVisitFromDoctor" method="post" class="p-5" id="quickAddVisitForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="filterDate" value="@filterDate" />
+            <input type="hidden" name="patientId" id="quickAddPatientId" required />
+            
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    بحث عن المريض (الاسم أو رقم الهاتف) <span class="text-brand-600">*</span>
+                </label>
+                <div class="relative" id="quick-phone-autocomplete-wrap">
+                    <input type="text"
+                           class="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 focus:bg-white transition-colors"
+                           dir="rtl"
+                           id="quickPhoneNumberInput"
+                           placeholder="اكتب رقم الهاتف أو اسم المريض..."
+                           autocomplete="off" />
+
+                    <!-- Search spinner -->
+                    <span id="quickSearchSpinner"
+                          class="absolute inset-y-0 left-0 flex items-center pl-3.5 hidden">
+                        <svg class="animate-spin w-4 h-4 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+
+                    <!-- Autocomplete dropdown -->
+                    <div id="quick-autocomplete-list"
+                         class="absolute top-full right-0 left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden hidden max-h-52 overflow-y-auto">
+                    </div>
+                </div>
+                
+                <div id="quickPatientFoundChip"
+                     class="hidden mt-3 flex items-center gap-3 px-4 py-3 rounded-xl border border-green-200 bg-green-50 text-green-800">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-green-600 shrink-0"></i>
+                    <div>
+                        <div class="text-sm font-bold" id="quickFoundPatientName"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    تاريخ ووقت الزيارة <span class="text-brand-600">*</span>
+                </label>
+                <input name="visitDate" type="datetime-local" required value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")"
+                       class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" />
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">ملاحظات الزيارة (اختياري)</label>
+                <textarea name="notes" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"></textarea>
+            </div>
+
+            <div class="mb-6 flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <input name="isAvailable" value="true" type="checkbox" id="quickIsAvailable" class="w-4 h-4 rounded border-slate-300 text-green-600 focus:ring-green-600 cursor-pointer" />
+                <input name="isAvailable" value="false" type="hidden" />
+                <label for="quickIsAvailable" class="flex-1 cursor-pointer">
+                    <span class="block text-sm font-bold text-slate-700">متاحة للمريض</span>
+                </label>
+                <i data-lucide="eye" class="w-4 h-4 text-green-600"></i>
+            </div>
+
+            <button type="submit" id="quickAddSubmitBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-md shadow-brand-600/20 flex items-center justify-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                تسجيل الزيارة
+            </button>
+        </form>
     </div>
 </div>
 
@@ -365,6 +467,82 @@
             modal.classList.add('opacity-0', 'pointer-events-none');
             content.classList.add('scale-95');
         }
+        
+        function openQuickAddVisitModal() {
+            const modal = document.getElementById('quickAddVisitModal');
+            const content = document.getElementById('quickAddVisitModalContent');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            document.getElementById('quickPhoneNumberInput').focus();
+        }
+
+        function closeQuickAddVisitModal() {
+            const modal = document.getElementById('quickAddVisitModal');
+            const content = document.getElementById('quickAddVisitModalContent');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.add('scale-95');
+        }
+
+        // Quick Add Visit Autocomplete
+        (function() {
+            var input = document.getElementById('quickPhoneNumberInput');
+            var list = document.getElementById('quick-autocomplete-list');
+            var spinner = document.getElementById('quickSearchSpinner');
+            var patientIdHidden = document.getElementById('quickAddPatientId');
+            var foundChip = document.getElementById('quickPatientFoundChip');
+            var foundName = document.getElementById('quickFoundPatientName');
+            var searchTimeout;
+
+            if(!input) return;
+
+            input.addEventListener('input', function() {
+                var query = this.value.trim();
+                list.innerHTML = '';
+                patientIdHidden.value = '';
+                foundChip.classList.add('hidden');
+                
+                if (!query) { spinner.classList.add('hidden'); return; }
+
+                clearTimeout(searchTimeout);
+                spinner.classList.remove('hidden');
+                searchTimeout = setTimeout(function () {
+                    fetch('@Url.Action("SearchByPhone", "Patients")?phone=' + encodeURIComponent(query))
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            spinner.classList.add('hidden');
+                            list.innerHTML = '';
+                            if (data.success && data.patients && data.patients.length > 0) {
+                                data.patients.slice(0, 6).forEach(function (p) {
+                                    var item = document.createElement('div');
+                                    item.className = 'flex items-center gap-3 px-4 py-3 hover:bg-brand-50 cursor-pointer border-b border-slate-100 last:border-0 transition-colors';
+                                    item.innerHTML =
+                                        '<div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-xs shrink-0">' + (p.name ? p.name[0] : '?') + '</div>' +
+                                        '<div class="flex-1 min-w-0"><div class="text-sm font-bold text-slate-800 truncate">' + p.name + '</div><div class="text-xs text-slate-400 font-mono" dir="ltr">' + p.phone + '</div></div>';
+                                    item.addEventListener('click', function () {
+                                        input.value = p.name + ' (' + p.phone + ')';
+                                        patientIdHidden.value = p.id;
+                                        list.classList.add('hidden');
+                                        foundChip.classList.remove('hidden');
+                                        foundName.textContent = 'تم اختيار المريض: ' + p.name;
+                                        lucide.createIcons();
+                                    });
+                                    list.appendChild(item);
+                                });
+                                list.classList.remove('hidden');
+                            }
+                        })
+                        .catch(function () { spinner.classList.add('hidden'); });
+                }, 300);
+            });
+            
+            document.getElementById('quickAddVisitForm').addEventListener('submit', function(e) {
+                if (!patientIdHidden.value) {
+                    e.preventDefault();
+                    alert('يرجى البحث عن المريض واختياره من القائمة أولاً.');
+                    input.focus();
+                }
+            });
+        })();
         
         function updateFileName(input) {
             const text = document.getElementById('fileChosenText');

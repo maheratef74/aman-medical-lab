@@ -176,16 +176,16 @@ namespace DrMohamedWeb.Controllers
         public async Task<IActionResult> SearchByPhone(string phone)
         {
             if (string.IsNullOrWhiteSpace(phone))
-                return Json(new { success = false, message = "رقم الهاتف غير صالح" });
+                return Json(new { success = false, message = "نص البحث غير صالح" });
 
             var patients = await _context.Patients
-                .Where(p => p.PhoneNumber.Contains(phone))
+                .Where(p => p.PhoneNumber.Contains(phone) || p.Name.Contains(phone))
                 .Take(10)
                 .Select(p => new { id = p.Id, name = p.Name, phone = p.PhoneNumber })
                 .ToListAsync();
 
             if (patients.Count == 0)
-                return Json(new { success = false, message = "لم يتم العثور على مريض بهذا الرقم" });
+                return Json(new { success = false, message = "لم يتم العثور على مريض" });
 
             return Json(new { success = true, patients = patients });
         }

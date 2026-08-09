@@ -163,6 +163,47 @@ namespace DrMohamedWeb.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadFromPatientVisits(UploadResultViewModel model)
+        {
+            if (model.Files != null && model.Files.Count > 0)
+            {
+                int uploadedCount = 0;
+                foreach (var file in model.Files)
+                {
+                    if (file.Length > 0 && Path.GetExtension(file.FileName).ToLower() == ".pdf")
+                    {
+                        var filePath = await _fileUploadService.UploadPdfAsync(file);
+
+                        var testResult = new TestResult
+                        {
+                            VisitId = model.VisitId,
+                            TestName = string.IsNullOrWhiteSpace(model.TestName)
+                                ? Path.GetFileNameWithoutExtension(file.FileName)
+                                : model.TestName,
+                            FilePath = filePath
+                        };
+
+                        _context.TestResults.Add(testResult);
+                        uploadedCount++;
+                    }
+                }
+
+                if (uploadedCount > 0)
+                {
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = $"تم إضافة {uploadedCount} نتيجة بنجاح ✓";
+                }
+                else
+                {
+                    TempData["Success"] = "لم يتم إضافة أي ملفات. يرجى التأكد من اختيار ملفات PDF.";
+                }
+            }
+
+            return RedirectToAction("Index", "Visits", new { patientId = model.PatientId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFromDoctor(int id, [FromForm] string FilterDate)
         {
             var testResult = await _context.TestResults.FindAsync(id);

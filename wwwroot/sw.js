@@ -1,5 +1,5 @@
 /* معمل أمان — Service Worker */
-const CACHE_NAME = 'amanlab-v3';
+const CACHE_NAME = 'amanlab-v4';
 const CORE_ASSETS = [
     '/',
     '/manifest.webmanifest',
