@@ -177,10 +177,72 @@ namespace DrMohamedWeb.Controllers
             return RedirectToAction(nameof(Index), new { patientId = patientId });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleAvailabilityFromDoctor(int id, string filterDate)
+        {
+            var visit = await _context.PatientVisits.FindAsync(id);
+            if (visit != null)
+            {
+                visit.IsAvailable = !visit.IsAvailable;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "تم تحديث حالة الزيارة بنجاح ✓";
+            }
+            return RedirectToAction(nameof(DoctorVisits), new { date = filterDate });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteVisit(int id, string filterDate)
+        {
+            var visit = await _context.PatientVisits
+                .Include(v => v.TestResults)
+                .FirstOrDefaultAsync(v => v.Id == id);
+                
+            if (visit != null)
+            {
+                var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                
+                // Delete associated test result files
+                if (visit.TestResults != null)
+                {
+                    foreach (var testResult in visit.TestResults)
+                    {
+                        if (!string.IsNullOrEmpty(testResult.FilePath))
+                        {
+                            var filePhysicalPath = Path.Combine(webRootPath, testResult.FilePath.TrimStart('/'));
+                            if (System.IO.File.Exists(filePhysicalPath))
+                            {
+                                try
+                                {
+                                    System.IO.File.Delete(filePhysicalPath);
+                                }
+                                catch (IOException)
+                                {
+                                    // Log or handle file in use gracefully
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                _context.PatientVisits.Remove(visit);
+                await _context.SaveChangesAsync();
+                
+                TempData["Success"] = "تم حذف الزيارة وجميع نتائج التحاليل المرتبطة بها بنجاح ✓";
+            }
+            else
+            {
+                TempData["Error"] = "لم يتم العثور على الزيارة المطلوبة.";
+            }
+            
+            return RedirectToAction(nameof(DoctorVisits), new { date = filterDate });
+        }
+
         [HttpGet]
         public IActionResult AddVisit()
         {
-            var model = new AddVisitViewModel { VisitDate = DateTime.Today };
+            var model = new AddVisitViewModel { VisitDate = DateTime.Now };
             return View(model);
         }
 
@@ -257,6 +319,36 @@ namespace DrMohamedWeb.Controllers
                 : "تم تسجيل الزيارة بنجاح ✓ — يمكنك رفع النتائج لاحقاً";
 
             return RedirectToAction(nameof(Index), new { patientId = patient.Id });
+        }
+        [HttpGet]
+        public async Task<IActionResult> DoctorVisits(DateTime? date, int page = 1)
+        {
+            DateTime filterDate = date ?? DateTime.Today;
+
+            var query = _context.PatientVisits
+                .Include(v => v.Patient)
+                .Include(v => v.TestResults)
+                .Where(v => v.VisitDate.Date == filterDate.Date);
+
+            var totalItems = await query.CountAsync();
+            var pageSize = 10;
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            if (page < 1) page = 1;
+            if (totalPages > 0 && page > totalPages) page = totalPages;
+
+            var visits = await query
+                .OrderByDescending(v => v.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.FilterDate = filterDate.ToString("yyyy-MM-dd");
+
+            return View(visits);
         }
     }
 }

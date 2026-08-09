@@ -26,21 +26,16 @@ body {
 .navbar-brand-custom {
     font-size: 1.5rem;
     font-weight: 900;
-    color: #fff !important;
+    color: #000 !important;
     letter-spacing: .02em;
     transition: color 0.3s;
 }
 
-.navbar-brand-custom span {
-    color: #a7f3d0 !important; /* light green */
-    transition: color 0.3s;
-}
 
 .navbar-brand-custom img {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    object-fit: cover;
+    height: 65px;
+    width: auto;
+    object-fit: contain;
 }
 
 .nav-link-custom {
@@ -69,13 +64,7 @@ body {
     box-shadow: 0 2px 16px rgba(213, 33, 42, .08);
 }
 
-#mainNav.scrolled .navbar-brand-custom {
-    color: #d5212a !important;
-}
 
-#mainNav.scrolled .navbar-brand-custom span {
-    color: #198754 !important;
-}
 
 #mainNav.scrolled .nav-link-custom {
     color: #1e293b !important;

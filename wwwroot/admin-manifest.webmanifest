@@ -1,0 +1,20 @@
+{
+  "name": "لوحة إدارة معمل أمان",
+  "short_name": "إدارة أمان",
+  "description": "لوحة التحكم الخاصة بمعمل أمان للتحاليل الطبية",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/Admin/Dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#d5212a",
+  "icons": [
+    {
+      "src": "/images/app-icon.jpeg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

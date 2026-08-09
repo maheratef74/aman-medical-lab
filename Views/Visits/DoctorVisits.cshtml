@@ -1,0 +1,435 @@
+@model IEnumerable<DrMohamedWeb.Core.Entities.PatientVisit>
+@{
+    ViewData["Title"] = "الزيارات";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    string filterDate = ViewBag.FilterDate;
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header & Filter -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
+                <i data-lucide="stethoscope" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h2 class="font-bold text-slate-800 text-lg">زيارات اليوم</h2>
+                <p class="text-xs text-slate-400 font-medium">عرض وإضافة النتائج مباشرة</p>
+            </div>
+        </div>
+
+        <form method="get" asp-action="DoctorVisits" class="flex items-center gap-2">
+            <input type="date" name="date" value="@filterDate" class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-slate-700 font-medium" onchange="this.form.submit()" />
+            <button type="submit" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg transition-colors">
+                <i data-lucide="filter" class="w-4 h-4"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Alert -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-3">
+            <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+            <span class="text-sm font-bold">@TempData["Success"]</span>
+        </div>
+    }
+
+    <!-- Visits List -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-right">
+                <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold">
+                    <tr>
+                        <th class="px-5 py-3">المريض</th>
+                        <th class="px-5 py-3">رقم الهاتف</th>
+                        <th class="px-5 py-3">الوقت</th>
+                        <th class="px-5 py-3 text-center">النتائج</th>
+                        <th class="px-5 py-3 text-center">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="px-5 py-8 text-center text-slate-400 font-medium">
+                                لا توجد زيارات مسجلة في هذا اليوم.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var visit in Model)
+                    {
+                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="toggleDetails('details-@visit.Id')">
+                            <td class="px-5 py-3 font-bold text-slate-700">@visit.Patient?.Name</td>
+                            <td class="px-5 py-3 font-medium text-slate-500">@(visit.Patient?.PhoneNumber ?? "—")</td>
+                            <td class="px-5 py-3 font-medium text-slate-500">
+                                <div class="text-xs text-slate-400">@visit.VisitDate.ToString("yyyy-MM-dd")</div>
+                                <div>@visit.VisitDate.ToString("hh:mm tt")</div>
+                            </td>
+                            <td class="px-5 py-3 text-center">
+                                <span class="inline-flex items-center justify-center bg-brand-50 text-brand-700 px-2.5 py-0.5 rounded-full text-xs font-bold border border-brand-100">
+                                    @(visit.TestResults?.Count ?? 0)
+                                </span>
+                            </td>
+                            <td class="px-5 py-3 text-center" onclick="event.stopPropagation()">
+                                <div class="flex items-center justify-center gap-2">
+                                    <!-- Toggle Availability -->
+                                    <form asp-controller="Visits" asp-action="ToggleAvailabilityFromDoctor" method="post" class="inline" onsubmit="return handleToggleSubmit(this);">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@visit.Id" />
+                                        <input type="hidden" name="filterDate" value="@filterDate" />
+                                        <button type="submit"
+                                                title="@(visit.IsAvailable ? "متاحة (اضغط للإخفاء)" : "مخفية (اضغط للإظهار)")"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm @(visit.IsAvailable ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200")">
+                                            <i data-lucide="@(visit.IsAvailable ? "eye" : "eye-off")" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </form>
+
+                                    <!-- Upload Result -->
+                                    <button type="button" 
+                                            onclick="openUploadModal(@visit.Id, '@visit.Patient?.Name')"
+                                            class="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                        <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                                        إضافة نتيجة
+                                    </button>
+
+                                    <!-- Delete Visit -->
+                                    <button type="button" 
+                                            onclick="openDeleteVisitModal(@visit.Id, '@visit.Patient?.Name')"
+                                            class="inline-flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm"
+                                            title="حذف الزيارة">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="details-@visit.Id" class="hidden bg-slate-50 border-b border-slate-100">
+                            <td colspan="5" class="px-5 py-4">
+                                @if (visit.TestResults != null && visit.TestResults.Any())
+                                {
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        @foreach (var test in visit.TestResults)
+                                        {
+                                            <div class="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3 shadow-sm hover:shadow-md transition-shadow">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <div class="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600 shrink-0">
+                                                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                                                    </div>
+                                                    <div class="truncate text-right">
+                                                        <p class="text-sm font-bold text-slate-800 truncate" title="@test.TestName">@test.TestName</p>
+                                                        <p class="text-[10px] text-slate-400 font-medium">@test.UploadedAt.ToString("yyyy-MM-dd HH:mm")</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-1 shrink-0">
+                                                    <a href="@test.FilePath" target="_blank" class="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="عرض الملف">
+                                                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                                                    </a>
+                                                    <button type="button" onclick="openDeleteModal(@test.Id, '@test.TestName.Replace("'", "\\'")')" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="حذف الملف">
+                                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-xs text-slate-400 font-medium text-center py-2">لا يوجد ملفات لهذه الزيارة.</p>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-xs text-slate-400 font-medium">
+                    صفحة @currentPage من @totalPages
+                </p>
+                <div class="flex gap-1">
+                    @if (currentPage > 1)
+                    {
+                        <a href="@Url.Action("DoctorVisits", new { date = filterDate, page = currentPage - 1 })" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors">السابق</a>
+                    }
+                    @if (currentPage < totalPages)
+                    {
+                        <a href="@Url.Action("DoctorVisits", new { date = filterDate, page = currentPage + 1 })" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors">التالي</a>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div id="uploadModal" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeUploadModal()"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 relative z-10 transform scale-95 transition-transform duration-300 overflow-hidden" id="uploadModalContent">
+        
+        <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="font-bold text-slate-800">إضافة نتيجة تحليل</h3>
+            <button onclick="closeUploadModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form id="uploadForm" asp-controller="TestResults" asp-action="UploadFromDoctor" enctype="multipart/form-data" method="post" class="p-5">
+            <input type="hidden" name="FilterDate" value="@filterDate" />
+            <input type="hidden" name="VisitId" id="modalVisitId" />
+            
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-500 mb-1.5">المريض</label>
+                <div id="modalPatientName" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 font-bold"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">اسم التحليل (اختياري)</label>
+                <input type="text" name="TestName" placeholder="مثال: CBC" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" />
+                <p class="text-[11px] text-slate-400 mt-1">سيتم استخدام اسم الملف إذا ترك فارغاً</p>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">ملفات النتائج (PDF)</label>
+                <div class="relative border-2 border-dashed border-slate-200 rounded-xl px-4 py-6 text-center hover:bg-slate-50 hover:border-brand-300 transition-all group">
+                    <input type="file" name="Files" id="Files" multiple accept=".pdf" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this)" />
+                    <div class="flex flex-col items-center pointer-events-none">
+                        <div class="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 mb-2 group-hover:scale-110 transition-transform">
+                            <i data-lucide="file-up" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700" id="fileChosenText">اضغط لاختيار الملفات</span>
+                        <span class="text-[11px] text-slate-400 mt-0.5">يمكنك اختيار أكثر من ملف PDF</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadProgressContainer" class="hidden mb-6">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5">
+                    <span>جاري الرفع...</span>
+                    <span id="uploadProgressText">0%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div id="uploadProgressBar" class="bg-brand-600 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <button type="submit" id="uploadSubmitBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-md shadow-brand-600/20 flex items-center justify-center gap-2">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                حفظ النتائج
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 relative z-10 transform scale-95 transition-transform duration-300 overflow-hidden" id="deleteModalContent">
+        <div class="p-6 text-center">
+            <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 text-red-600">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-extrabold text-slate-800 text-lg mb-2">تأكيد الحذف</h3>
+            <p class="text-sm text-slate-500 mb-6">هل أنت متأكد من حذف الملف <span id="deleteFileName" class="font-bold text-slate-700"></span>؟ لا يمكن التراجع عن هذه الخطوة.</p>
+            
+            <form id="deleteForm" asp-controller="TestResults" asp-action="DeleteFromDoctor" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="deleteFileId" />
+                <input type="hidden" name="FilterDate" value="@filterDate" />
+                
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeDeleteModal()"
+                            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                            class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        نعم، احذف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Visit Modal -->
+<div id="deleteVisitModal" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeDeleteVisitModal()"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 relative z-10 transform scale-95 transition-transform duration-300 overflow-hidden" id="deleteVisitModalContent">
+        <div class="p-6 text-center">
+            <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 text-red-600">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-extrabold text-slate-800 text-lg mb-2">تأكيد حذف الزيارة</h3>
+            <p class="text-sm text-slate-500 mb-6">هل أنت متأكد من حذف زيارة المريض <span id="deleteVisitPatientName" class="font-bold text-slate-700"></span>؟ سيتم حذف جميع ملفات النتائج المرتبطة بها نهائياً. لا يمكن التراجع عن هذه الخطوة.</p>
+            
+            <form id="deleteVisitForm" asp-controller="Visits" asp-action="DeleteVisit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="deleteVisitId" />
+                <input type="hidden" name="FilterDate" value="@filterDate" />
+                
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeDeleteVisitModal()"
+                            class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                            class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        نعم، احذف الزيارة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleDetails(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) {
+                row.classList.toggle('hidden');
+            }
+        }
+
+        function handleToggleSubmit(form) {
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn.disabled) return false;
+            
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            btn.innerHTML = '<svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+            return true;
+        }
+
+        function openUploadModal(visitId, patientName) {
+            document.getElementById('modalVisitId').value = visitId;
+            document.getElementById('modalPatientName').innerText = patientName;
+            
+            const modal = document.getElementById('uploadModal');
+            const content = document.getElementById('uploadModalContent');
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+        }
+
+        function closeUploadModal() {
+            const modal = document.getElementById('uploadModal');
+            const content = document.getElementById('uploadModalContent');
+            
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.add('scale-95');
+        }
+
+        function openDeleteModal(fileId, fileName) {
+            document.getElementById('deleteFileId').value = fileId;
+            document.getElementById('deleteFileName').innerText = '"' + fileName + '"';
+            
+            const modal = document.getElementById('deleteModal');
+            const content = document.getElementById('deleteModalContent');
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            const content = document.getElementById('deleteModalContent');
+            
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.add('scale-95');
+        }
+        
+        function openDeleteVisitModal(visitId, patientName) {
+            document.getElementById('deleteVisitId').value = visitId;
+            document.getElementById('deleteVisitPatientName').innerText = '"' + patientName + '"';
+            
+            const modal = document.getElementById('deleteVisitModal');
+            const content = document.getElementById('deleteVisitModalContent');
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+        }
+
+        function closeDeleteVisitModal() {
+            const modal = document.getElementById('deleteVisitModal');
+            const content = document.getElementById('deleteVisitModalContent');
+            
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.add('scale-95');
+        }
+        
+        function updateFileName(input) {
+            const text = document.getElementById('fileChosenText');
+            if (input.files && input.files.length > 1) {
+                text.innerText = `تم اختيار ${input.files.length} ملفات`;
+                text.classList.add('text-brand-600');
+            } else if (input.files && input.files.length === 1) {
+                text.innerText = input.files[0].name;
+                text.classList.add('text-brand-600');
+            } else {
+                text.innerText = "اضغط لاختيار الملفات";
+                text.classList.remove('text-brand-600');
+            }
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const submitBtn = document.getElementById('uploadSubmitBtn');
+            const progressContainer = document.getElementById('uploadProgressContainer');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const progressText = document.getElementById('uploadProgressText');
+            
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+            
+            xhr.open('POST', form.action, true);
+            
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressText.innerText = percentComplete + '%';
+                }
+            });
+            
+            xhr.onload = function() {
+                if (xhr.status === 200 || xhr.status === 302 || xhr.status === 201) {
+                    window.location.reload();
+                } else {
+                    alert('حدث خطأ أثناء الرفع. الرجاء المحاولة مرة أخرى.');
+                    submitBtn.disabled = false;
+                    progressContainer.classList.add('hidden');
+                    submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> حفظ النتائج';
+                    lucide.createIcons();
+                }
+            };
+            
+            xhr.onerror = function() {
+                alert('حدث خطأ في الاتصال بالخادم.');
+                submitBtn.disabled = false;
+                progressContainer.classList.add('hidden');
+                submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> حفظ النتائج';
+                lucide.createIcons();
+            };
+            
+            // UI state updates
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> جاري الرفع...';
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressText.innerText = '0%';
+            
+            xhr.send(formData);
+        });
+    </script>
+}

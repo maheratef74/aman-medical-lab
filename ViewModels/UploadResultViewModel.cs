@@ -7,6 +7,7 @@ namespace DrMohamedWeb.ViewModels
     public class UploadResultViewModel
     {
         public int VisitId { get; set; }
+        public int PatientId { get; set; }
 
         [Required(ErrorMessage = "اسم التحليل مطلوب")]
         public string TestName { get; set; } = string.Empty;

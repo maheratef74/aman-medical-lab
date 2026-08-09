@@ -27,7 +27,8 @@ namespace DrMohamedWeb.Infrastructure.Services
             var year = DateTime.Now.Year.ToString();
             var month = DateTime.Now.Month.ToString("D2");
             var folderName = Path.Combine("results", year, month);
-            var pathToSave = Path.Combine(_env.WebRootPath, folderName);
+            var webRoot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var pathToSave = Path.Combine(webRoot, folderName);
 
             if (!Directory.Exists(pathToSave))
             {

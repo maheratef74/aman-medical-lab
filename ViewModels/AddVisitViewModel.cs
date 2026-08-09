@@ -16,7 +16,7 @@ namespace DrMohamedWeb.ViewModels
 
         [Required(ErrorMessage = "تاريخ الزيارة مطلوب")]
         [Display(Name = "تاريخ الزيارة")]
-        public DateTime VisitDate { get; set; } = DateTime.Today;
+        public DateTime VisitDate { get; set; } = DateTime.Now;
 
         [Display(Name = "ملاحظات الزيارة")]
         public string? Notes { get; set; }

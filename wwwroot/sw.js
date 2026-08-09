@@ -1,10 +1,12 @@
 /* معمل أمان — Service Worker */
-const CACHE_NAME = 'amanlab-v1';
+const CACHE_NAME = 'amanlab-v3';
 const CORE_ASSETS = [
     '/',
     '/manifest.webmanifest',
+    '/admin-manifest.webmanifest',
     '/css/amanlab.css',
-    '/images/aman-logo.jpg',
+    '/images/aman-logo.png',
+    '/images/app-icon.jpeg',
     '/icons/icon-192.png',
     '/icons/icon-512.png'
 ];

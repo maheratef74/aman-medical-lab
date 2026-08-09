@@ -4,7 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — معمل أمان</title>
-    <link rel="icon" type="image/jpeg" href="~/images/aman-logo.jpg" />
+    <link rel="icon" type="image/png" href="~/images/aman-logo.png" />
+    
+    <!-- PWA Settings -->
+    <link rel="manifest" href="~/admin-manifest.webmanifest" />
+    <meta name="theme-color" content="#d5212a" />
+    <link rel="apple-touch-icon" href="~/images/app-icon.jpeg" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="إدارة أمان" />
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -138,9 +147,9 @@
 
         <!-- Logo -->
         <div class="flex items-center gap-3 px-5 py-5 border-b border-slate-100">
-            <img src="~/images/aman-logo.jpg" alt="معمل أمان" class="w-9 h-9 rounded-xl object-cover shadow-sm shrink-0" />
+            <img src="~/images/aman-logo.png" alt="Logo" class="w-14 h-14 object-contain shrink-0 mix-blend-multiply" />
             <div>
-                <div class="font-extrabold text-slate-800 text-base leading-tight">معمل أمان</div>
+                <div class="font-extrabold text-base leading-tight"><span class="text-slate-900">معمل</span> <span class="text-brand-600">أمان</span></div>
                 <div class="text-xs text-slate-400 font-medium">لوحة الإدارة</div>
             </div>
             <!-- Mobile close -->
@@ -162,6 +171,7 @@
                 bool isPatientsList = currentController == "Patients" && currentAction == "Index";
                 bool isCreatePatient = currentController == "Patients" && currentAction == "Create";
                 bool isVisitFlow = currentController == "Visits" && currentAction == "AddVisit";
+                bool isDoctorVisits = currentController == "Visits" && currentAction == "DoctorVisits";
             }
 
             <a asp-controller="Admin" asp-action="Dashboard"
@@ -180,13 +190,6 @@
                 <span class="text-sm font-semibold">المرضى</span>
             </a>
 
-            <a asp-controller="Patients" asp-action="Create"
-               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all duration-150 group @(isCreatePatient ? "nav-link-active" : "")">
-                <span class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center @(isCreatePatient ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200") transition-all">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i>
-                </span>
-                <span class="text-sm font-semibold">إضافة مريض</span>
-            </a>
 
             <a asp-controller="Visits" asp-action="AddVisit"
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all duration-150 group @(isVisitFlow ? "nav-link-active" : "")">
@@ -196,6 +199,22 @@
                 <span class="text-sm font-semibold">زيارة ونتائج</span>
                 <span class="mr-auto text-xs font-bold bg-brand-600 text-white px-1.5 py-0.5 rounded-md">جديد</span>
             </a>
+
+            <a asp-controller="Visits" asp-action="DoctorVisits"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all duration-150 group @(isDoctorVisits ? "nav-link-active" : "")">
+                <span class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center @(isDoctorVisits ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200") transition-all">
+                    <i data-lucide="stethoscope" class="w-4 h-4"></i>
+                </span>
+                <span class="text-sm font-semibold">الزيارات</span>
+            </a>
+
+            <!-- Install App Button (Sidebar) -->
+            <button id="sidebarInstallBtn" class="hidden items-center gap-3 px-3 py-2.5 rounded-xl text-brand-600 hover:bg-brand-50 hover:text-brand-700 transition-all duration-150 group w-full text-right mt-2">
+                <span class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center bg-brand-50 border border-brand-200 text-brand-600 group-hover:bg-brand-100 transition-all">
+                    <i data-lucide="monitor-smartphone" class="w-4 h-4"></i>
+                </span>
+                <span class="text-sm font-semibold">تثبيت التطبيق</span>
+            </button>
         </nav>
 
         <!-- Sidebar Bottom: Logout -->
@@ -268,12 +287,13 @@
         </main>
 
         <!-- ═══════ FOOTER ═══════ -->
-        <footer class="px-6 py-4 border-t border-slate-100 bg-white">
+        <footer class="px-6 py-4 border-t border-slate-100 bg-white mt-auto">
             <p class="text-xs text-slate-400 text-center">
                 © 2026 معمل أمان للتحاليل الطبية — جميع الحقوق محفوظة
             </p>
         </footer>
     </div>
+
 
     <!-- ═══════════════════════════════════════
          SCRIPTS
@@ -326,6 +346,68 @@
 
         // Re-init lucide after any dynamic content
         document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+
+        // ══════════════════ PWA: Service Worker + Install Prompt ══════════════════
+        (function () {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function () {
+                    navigator.serviceWorker.register('/sw.js').catch(function (err) {
+                        console.warn('SW registration failed:', err);
+                    });
+                });
+            }
+
+            const installBtn = document.getElementById('sidebarInstallBtn');
+            if (!installBtn) return;
+            
+            let deferredPrompt = null;
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+            function showInstallButton() {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+            }
+
+            function hideInstallButton() {
+                installBtn.classList.add('hidden');
+                installBtn.classList.remove('flex');
+            }
+
+            if (isStandalone) {
+                hideInstallButton();
+                return;
+            }
+
+            // Always show the button for visibility
+            showInstallButton();
+
+            window.addEventListener('beforeinstallprompt', function (e) {
+                e.preventDefault();
+                deferredPrompt = e;
+                showInstallButton();
+            });
+
+            window.addEventListener('appinstalled', function () {
+                hideInstallButton();
+            });
+
+            installBtn.addEventListener('click', function () {
+                if (isIOS && !deferredPrompt) {
+                    alert('لتثبيت التطبيق على الآيفون، اضغط على زر المشاركة (Share) في المتصفح بالأسفل ثم اختر "إضافة إلى الشاشة الرئيسية" (Add to Home Screen).');
+                    return;
+                }
+                if (!deferredPrompt) {
+                    alert('عذراً، المتصفح لم يرسل طلب التثبيت التلقائي.\n\nللتثبيت يدوياً: اضغط على أيقونة التثبيت في شريط عنوان المتصفح، أو من قائمة المتصفح (ثلاث نقاط) اختر "تثبيت التطبيق" أو "Install App".');
+                    return;
+                }
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function (choice) {
+                    if (choice.outcome === 'accepted') hideInstallButton();
+                    deferredPrompt = null;
+                });
+            });
+        })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
