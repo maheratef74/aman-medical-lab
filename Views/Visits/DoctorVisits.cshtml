@@ -68,7 +68,21 @@
                     @foreach (var visit in Model)
                     {
                         <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="toggleDetails('details-@visit.Id')">
-                            <td class="px-5 py-3 font-bold text-slate-700">@visit.Patient?.Name</td>
+                            <td class="px-5 py-3 font-bold text-slate-700" onclick="event.stopPropagation()">
+                                @if (visit.Patient != null)
+                                {
+                                    <a asp-controller="Visits" asp-action="Index" asp-route-patientId="@visit.PatientId"
+                                       class="inline-flex items-center gap-1.5 text-brand-600 hover:text-brand-800 hover:underline transition-colors font-bold"
+                                       title="عرض ملف المريض والزيارات">
+                                        <i data-lucide="user" class="w-4 h-4 shrink-0 text-brand-500"></i>
+                                        <span>@visit.Patient.Name</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-slate-400">—</span>
+                                }
+                            </td>
                             <td class="px-5 py-3 font-medium" onclick="event.stopPropagation()">
                                 @if (!string.IsNullOrEmpty(visit.Patient?.PhoneNumber))
                                 {

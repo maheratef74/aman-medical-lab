@@ -64,6 +64,15 @@
         #admin-sidebar {
             transition: transform 0.3s cubic-bezier(.4,0,.2,1);
         }
+        #main-wrapper {
+            transition: margin-right 0.3s cubic-bezier(.4,0,.2,1);
+        }
+        .sidebar-collapsed #admin-sidebar {
+            transform: translateX(100%) !important;
+        }
+        .sidebar-collapsed #main-wrapper {
+            margin-right: 0 !important;
+        }
         #sidebar-overlay {
             transition: opacity 0.3s ease;
         }
@@ -152,9 +161,10 @@
                 <div class="font-extrabold text-base leading-tight"><span class="text-slate-900">معمل</span> <span class="text-brand-600">أمان</span></div>
                 <div class="text-xs text-slate-400 font-medium">لوحة الإدارة</div>
             </div>
-            <!-- Mobile close -->
-            <button onclick="closeSidebar()"
-                    class="mr-auto p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors lg:hidden">
+            <!-- Sidebar toggle close button -->
+            <button onclick="toggleSidebar()"
+                    title="إغلاق القائمة الجانبية"
+                    class="mr-auto p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </button>
         </div>
@@ -235,16 +245,17 @@
     <!-- ═══════════════════════════════════════
          MAIN WRAPPER (offset by sidebar on desktop)
     ═══════════════════════════════════════ -->
-    <div class="lg:mr-64 min-h-screen flex flex-col">
+    <div id="main-wrapper" class="lg:mr-64 min-h-screen flex flex-col">
 
         <!-- ═══════ TOPBAR ═══════ -->
         <header class="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-slate-100">
             <div class="flex items-center gap-4 px-4 sm:px-6 h-16">
 
-                <!-- Mobile hamburger -->
-                <button onclick="openSidebar()"
-                        class="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
+                <!-- Sidebar toggle button -->
+                <button onclick="toggleSidebar()"
+                        title="إغلاق / فتح القائمة الجانبية"
+                        class="p-2 rounded-xl text-slate-600 hover:text-brand-600 hover:bg-slate-100 transition-colors flex items-center justify-center shrink-0">
+                    <i data-lucide="panel-right-close" id="sidebar-toggle-icon" class="w-5 h-5"></i>
                 </button>
 
                 <!-- Page title + breadcrumb -->
@@ -302,7 +313,33 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Sidebar open/close
+        // Sidebar open/close & collapse toggle
+        function toggleSidebar() {
+            const isMobile = window.innerWidth < 1024;
+            const sidebar = document.getElementById('admin-sidebar');
+            
+            if (isMobile) {
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    openSidebar();
+                } else {
+                    closeSidebar();
+                }
+            } else {
+                const body = document.body;
+                const isCollapsed = body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false');
+                updateToggleIcon(isCollapsed);
+            }
+        }
+
+        function updateToggleIcon(isCollapsed) {
+            const icon = document.getElementById('sidebar-toggle-icon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isCollapsed ? 'panel-right-open' : 'panel-right-close');
+                lucide.createIcons();
+            }
+        }
+
         function openSidebar() {
             const sidebar = document.getElementById('admin-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
@@ -320,6 +357,14 @@
             overlay.classList.remove('opacity-100');
             document.body.style.overflow = '';
         }
+
+        // Apply saved sidebar preference on initial load
+        (function () {
+            if (window.innerWidth >= 1024 && localStorage.getItem('sidebar_collapsed') === 'true') {
+                document.body.classList.add('sidebar-collapsed');
+                document.addEventListener('DOMContentLoaded', () => updateToggleIcon(true));
+            }
+        })();
 
         // Toast notifications
         window.showToast = function(message, type = 'success') {
