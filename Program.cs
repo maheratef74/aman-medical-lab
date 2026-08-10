@@ -16,6 +16,8 @@ builder.Services.AddDbContext<AmanDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IFileUploadService, FileUploadService>();
+
+builder.Services.AddHostedService<ResultFileCleanupService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "AmanMedicalLabSecretKeyForJwtAuthentication2026!";
@@ -31,6 +33,22 @@ builder.Services.AddAuthentication(options =>
         options.LoginPath = "/Admin/Login";
         options.LogoutPath = "/Admin/Logout";
         options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                if (context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
+                    context.Request.Headers.Accept.ToString().Contains("application/json"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    context.Response.ContentType = "application/json";
+                    return context.Response.WriteAsJsonAsync(new { success = false, message = "Session expired." });
+                }
+
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            }
+        };
     })
     .AddJwtBearer(options =>
     {

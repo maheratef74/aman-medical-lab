@@ -6,7 +6,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace DrMohamedWeb.Controllers
 {
@@ -20,12 +23,18 @@ namespace DrMohamedWeb.Controllers
 
         private readonly AmanDbContext _context;
         private readonly ITokenService _tokenService;
+        private readonly IConfiguration _config;
 
-        public AdminController(AmanDbContext context, ITokenService tokenService)
+        public AdminController(AmanDbContext context, ITokenService tokenService, IConfiguration config)
         {
             _context = context;
             _tokenService = tokenService;
+            _config = config;
         }
+
+        private bool SecureCookies =>
+            Request.IsHttps ||
+            string.Equals(Request.Headers["X-Forwarded-Proto"], "https", StringComparison.OrdinalIgnoreCase);
 
         [HttpGet]
         public IActionResult Login()
@@ -72,7 +81,7 @@ namespace DrMohamedWeb.Controllers
                 Response.Cookies.Append("X-Access-Token", accessToken, new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = SecureCookies,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTimeOffset.UtcNow.AddMinutes(15)
                 });
@@ -80,7 +89,7 @@ namespace DrMohamedWeb.Controllers
                 Response.Cookies.Append("X-Refresh-Token", refreshToken, new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = SecureCookies,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTimeOffset.UtcNow.AddDays(7)
                 });
@@ -143,7 +152,7 @@ namespace DrMohamedWeb.Controllers
             Response.Cookies.Append("X-Access-Token", result.Value.newAccessToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = SecureCookies,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTimeOffset.UtcNow.AddMinutes(15)
             });
@@ -151,7 +160,7 @@ namespace DrMohamedWeb.Controllers
             Response.Cookies.Append("X-Refresh-Token", result.Value.newRefreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = SecureCookies,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
@@ -163,6 +172,42 @@ namespace DrMohamedWeb.Controllers
                 refreshToken = result.Value.newRefreshToken,
                 expiresIn = 900
             });
+        }
+
+        [HttpGet]
+        public IActionResult TokenStatus()
+        {
+            var accessToken = Request.Cookies["X-Access-Token"];
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                return Unauthorized(new { success = false, message = "No access token." });
+            }
+
+            try
+            {
+                var secretKey = _config["Jwt:SecretKey"] ?? "AmanMedicalLabSecretKeyForJwtAuthentication2026!";
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+
+                var principal = new JwtSecurityTokenHandler().ValidateToken(accessToken,
+                    new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = key,
+                        ValidateIssuer = true,
+                        ValidIssuer = _config["Jwt:Issuer"] ?? "AmanLabApp",
+                        ValidateAudience = true,
+                        ValidAudience = _config["Jwt:Audience"] ?? "AmanLabUsers",
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
+                    }, out var validatedToken);
+
+                var exp = (validatedToken as JwtSecurityToken)?.ValidTo ?? DateTime.UtcNow.AddSeconds(-1);
+                return Ok(new { success = true, exp = new DateTimeOffset(exp).ToUnixTimeSeconds() });
+            }
+            catch
+            {
+                return Unauthorized(new { success = false, message = "Invalid access token." });
+            }
         }
 
         [Authorize]
@@ -263,6 +308,14 @@ namespace DrMohamedWeb.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
+            var refreshToken = Request.Cookies["X-Refresh-Token"];
+            if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                await _tokenService.RevokeRefreshTokenAsync(refreshToken);
+            }
+
+            Response.Cookies.Delete("X-Access-Token");
+            Response.Cookies.Delete("X-Refresh-Token");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
         }

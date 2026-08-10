@@ -609,66 +609,175 @@
             });
         })();
 
-        // ══════════════════ Silent 401 JWT Refresh Interceptor ══════════════════
+        // ══════════════════ Silent Auth Refresh (401 interceptor + heartbeat) ══════════════════
         (function () {
             let isRefreshing = false;
             let refreshSubscribers = [];
+            const EXCLUDED_PATHS = ['/Admin/Login', '/Admin/RefreshToken', '/Admin/TokenStatus', '/api/HomeVisit'];
 
-            function onRefreshed(success) {
-                refreshSubscribers.forEach(cb => cb(success));
-                refreshSubscribers = [];
-            }
-
-            async function performSilentRefresh() {
-                try {
-                    const response = await fetch('/Admin/RefreshToken', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({})
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        return data && data.success;
-                    }
-                } catch (e) {
-                    console.error('Silent refresh failed:', e);
+            function isExcluded(url) {
+                if (!url || url.charAt(0) !== '/') return false;
+                for (let i = 0; i < EXCLUDED_PATHS.length; i++) {
+                    if (url.indexOf(EXCLUDED_PATHS[i]) === 0) return true;
                 }
                 return false;
             }
 
-            const originalFetch = window.fetch;
-            window.fetch = async function (...args) {
-                let response = await originalFetch.apply(this, args);
+            function redirectToLogin() {
+                if (window.location.pathname === '/Admin/Login') return;
+                window.location.href = '/Admin/Login';
+            }
 
-                if (response.status === 401 && !args[0].toString().includes('/Admin/RefreshToken') && !args[0].toString().includes('/Admin/Login')) {
-                    if (!isRefreshing) {
-                        isRefreshing = true;
-                        const success = await performSilentRefresh();
-                        isRefreshing = false;
-                        onRefreshed(success);
-
-                        if (success) {
-                            return originalFetch.apply(this, args);
-                        } else {
-                            window.location.href = '/Admin/Login';
-                            return response;
-                        }
-                    } else {
-                        return new Promise(resolve => {
-                            refreshSubscribers.push(async (success) => {
-                                if (success) {
-                                    resolve(await originalFetch.apply(this, args));
-                                } else {
-                                    window.location.href = '/Admin/Login';
-                                    resolve(response);
-                                }
-                            });
-                        });
-                    }
+            // Single-flight silent refresh: concurrent 401s wait for one refresh call
+            function ensureFreshTokens() {
+                if (isRefreshing) {
+                    return new Promise(function (resolve) {
+                        refreshSubscribers.push(resolve);
+                    });
                 }
 
-                return response;
+                isRefreshing = true;
+                return fetch('/Admin/RefreshToken', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                    credentials: 'same-origin'
+                }).then(function (response) {
+                    if (!response.ok) return false;
+                    return response.json().then(function (data) {
+                        return !!(data && data.success);
+                    });
+                }).catch(function () {
+                    return false;
+                }).then(function (success) {
+                    isRefreshing = false;
+                    const subs = refreshSubscribers;
+                    refreshSubscribers = [];
+                    subs.forEach(function (cb) { cb(success); });
+                    return success;
+                });
+            }
+
+            // ── fetch wrapper ──
+            const originalFetch = window.fetch;
+            window.fetch = function (input, init) {
+                const url = typeof input === 'string' ? input : (input && input.url) || '';
+                const args = arguments;
+                return originalFetch.apply(this, args).then(function (response) {
+                    if (response.status !== 401 || isExcluded(url) || response.url.indexOf('/Admin/Login') !== -1) {
+                        return response;
+                    }
+                    return ensureFreshTokens().then(function (success) {
+                        if (success) {
+                            return originalFetch.apply(this, args);
+                        }
+                        redirectToLogin();
+                        return response;
+                    });
+                });
             };
+
+            // ── XMLHttpRequest wrapper (uploads etc.) ──
+            const OriginalXHR = window.XMLHttpRequest;
+            window.XMLHttpRequest = function () {
+                const xhr = new OriginalXHR();
+                let openArgs = null;
+                let sendBody = null;
+                let retried = false;
+
+                xhr.open = function (method, url) {
+                    openArgs = Array.prototype.slice.call(arguments);
+                    return OriginalXHR.prototype.open.apply(xhr, arguments);
+                };
+                xhr.send = function (body) {
+                    sendBody = body;
+                    return OriginalXHR.prototype.send.call(xhr, body);
+                };
+
+                xhr.addEventListener('load', function () {
+                    if (xhr.status !== 401 || retried || !openArgs || isExcluded(openArgs[1])) return;
+                    retried = true;
+                    ensureFreshTokens().then(function (success) {
+                        if (success) {
+                            xhr.open.apply(xhr, openArgs);
+                            xhr.send(sendBody);
+                        } else {
+                            redirectToLogin();
+                        }
+                    });
+                });
+
+                return xhr;
+            };
+            window.XMLHttpRequest.prototype = OriginalXHR.prototype;
+            window.XMLHttpRequest.UNSENT = OriginalXHR.UNSENT;
+            window.XMLHttpRequest.OPENED = OriginalXHR.OPENED;
+            window.XMLHttpRequest.HEADERS_RECEIVED = OriginalXHR.HEADERS_RECEIVED;
+            window.XMLHttpRequest.LOADING = OriginalXHR.LOADING;
+            window.XMLHttpRequest.DONE = OriginalXHR.DONE;
+
+            // ── jQuery ajax wrapper (AddByPhone etc.) ──
+            if (window.jQuery) {
+                const originalAjax = jQuery.ajax;
+                jQuery.ajax = function (url, options) {
+                    const settings = (typeof url === 'string') ? jQuery.extend({}, options || {}, { url: url }) : url;
+                    if (settings && typeof settings === 'object' && settings.url && !isExcluded(settings.url)) {
+                        const userError = settings.error;
+                        let retried = false;
+                        settings.error = function () {
+                            const xhr = arguments[0];
+                            if (xhr && xhr.status === 401 && !retried) {
+                                retried = true;
+                                ensureFreshTokens().then(function (success) {
+                                    if (success) {
+                                        const retryResult = jQuery.ajax(settings);
+                                        retryResult.fail(function () {
+                                            if (userError) userError.apply(this, arguments);
+                                        });
+                                    } else {
+                                        redirectToLogin();
+                                    }
+                                });
+                                return;
+                            }
+                            if (userError) userError.apply(this, arguments);
+                        };
+                    }
+                    return originalAjax.apply(this, arguments);
+                };
+            }
+
+            // ── Proactive heartbeat: renew before the 15-min cookie dies ──
+            function getAccessExpiry() {
+                return fetch('/Admin/TokenStatus', {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                }).then(function (response) {
+                    if (!response.ok) return null;
+                    return response.json();
+                }).then(function (data) {
+                    return data && data.success ? data.exp : null;
+                }).catch(function () {
+                    return null;
+                });
+            }
+
+            function heartbeat() {
+                getAccessExpiry().then(function (exp) {
+                    if (!exp) return;
+                    const remainingMs = exp * 1000 - Date.now();
+                    if (remainingMs < 120000) {
+                        ensureFreshTokens().then(function (success) {
+                            if (!success) redirectToLogin();
+                        });
+                    }
+                });
+            }
+
+            setInterval(heartbeat, 8 * 60 * 1000);
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) heartbeat();
+            });
         })();
     </script>
 
