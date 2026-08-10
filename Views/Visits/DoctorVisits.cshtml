@@ -87,7 +87,19 @@
                                 @if (!string.IsNullOrEmpty(visit.Patient?.PhoneNumber))
                                 {
                                     var waNumber = visit.Patient.PhoneNumber.StartsWith("0") ? "2" + visit.Patient.PhoneNumber : visit.Patient.PhoneNumber;
-                                    <a href="https://wa.me/@waNumber" target="_blank" title="مراسلة عبر واتساب" class="inline-flex items-center gap-1.5 text-green-700 hover:text-green-800 transition-colors bg-green-100 hover:bg-green-200 px-2.5 py-1 rounded-lg">
+                                    var patientName = visit.Patient?.Name ?? "صديقنا";
+                                    var greeting = DateTime.Now.Hour < 12 ? "صباح الخير" : "مساء الخير";
+                                    var waMessage = $"{greeting} {patientName}،" +
+                                                    $"\n\nسلامتك، معمل أمان يتمنى لك الشفاء العاجل." +
+                                                    $"\n\nللاستعلام عن نتيجة تحليلك، تفضل بزيارة موقعنا:" +
+                                                    $"\nhttps://aman-medical-lab.runasp.net" +
+                                                    $"\n\nالخطوات:" +
+                                                    $"\n1- افتح الموقع من الرابط أعلاه." +
+                                                    $"\n2- اكتب رقم هاتفك المسجل في خانة البحث." +
+                                                    $"\n3- اضغط زر (استعلام عن النتيجة) وستظهر نتيجتك مباشرة ويمكنك تحميلها." +
+                                                    $"\n\nمعمل أمان يتمنى لك الشفاء العاجل";
+                                    var waEncoded = System.Uri.EscapeDataString(waMessage);
+                                    <a href="https://wa.me/@waNumber?text=@waEncoded" target="_blank" title="مراسلة عبر واتساب" class="inline-flex items-center gap-1.5 text-green-700 hover:text-green-800 transition-colors bg-green-100 hover:bg-green-200 px-2.5 py-1 rounded-lg">
                                         <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
                                         <span dir="ltr" class="font-bold text-xs">@visit.Patient.PhoneNumber</span>
                                     </a>
