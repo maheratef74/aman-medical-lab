@@ -320,6 +320,8 @@
                 bool isCreatePatient = currentController == "Patients" && currentAction == "Create";
                 bool isVisitFlow = currentController == "Visits" && currentAction == "AddVisit";
                 bool isDoctorVisits = currentController == "Visits" && currentAction == "DoctorVisits";
+                bool isUsers = currentController == "Admin" &&
+                    (currentAction == "Users" || currentAction == "CreateUser" || currentAction == "EditUser");
             }
 
             <a asp-controller="Admin" asp-action="Dashboard"
@@ -355,6 +357,17 @@
                 </span>
                 <span class="text-sm font-semibold">الزيارات</span>
             </a>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Admin" asp-action="Users"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-all duration-150 group @(isUsers ? "nav-link-active" : "")">
+                    <span class="nav-icon-wrap w-8 h-8 rounded-lg flex items-center justify-center @(isUsers ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200") transition-all">
+                        <i data-lucide="user-cog" class="w-4 h-4"></i>
+                    </span>
+                    <span class="text-sm font-semibold">المستخدمون</span>
+                </a>
+            }
 
             <!-- Install App Button (Sidebar) -->
             <button id="sidebarInstallBtn" class="hidden items-center gap-3 px-3 py-2.5 rounded-xl text-brand-600 hover:bg-brand-50 hover:text-brand-700 transition-all duration-150 group w-full text-right mt-2">
@@ -425,13 +438,18 @@
                     <div class="w-px h-6 bg-slate-200 mx-1"></div>
 
                     <!-- User avatar -->
+                    @{
+                        var userName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "أدمن";
+                        var userInitial = string.IsNullOrWhiteSpace(userName) ? "م" : userName.Substring(0, 1);
+                        var roleLabel = User.IsInRole("Admin") ? "مدير" : (User.IsInRole("Assistant") ? "مساعد" : "موظف");
+                    }
                     <div class="flex items-center gap-2.5 cursor-pointer group">
                         <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-600 to-brand-900 flex items-center justify-center text-white font-bold text-sm shadow-sm shadow-brand-600/30">
-                            م
+                            @userInitial
                         </div>
                         <div class="hidden sm:block">
-                            <div class="text-sm font-bold text-slate-700 leading-tight">الإدارة</div>
-                            <div class="text-xs text-slate-400">مدير النظام</div>
+                            <div class="text-sm font-bold text-slate-700 leading-tight">@userName</div>
+                            <div class="text-xs text-slate-400">@roleLabel</div>
                         </div>
                     </div>
                 </div>

@@ -7,7 +7,7 @@ namespace DrMohamedWeb.Application.Interfaces
         string GenerateAccessToken(string username, string role = "Admin");
         string GenerateRefreshToken();
         Task<RefreshToken> SaveRefreshTokenAsync(string username, string token);
-        Task<(string newAccessToken, string newRefreshToken)?> RefreshTokensAsync(string refreshToken);
+        Task<(string username, string newAccessToken, string newRefreshToken)?> RefreshTokensAsync(string refreshToken);
         Task RevokeRefreshTokenAsync(string token);
     }
 }

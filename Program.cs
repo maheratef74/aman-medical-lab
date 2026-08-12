@@ -1,8 +1,10 @@
 using DrMohamedWeb.Application.Interfaces;
+using DrMohamedWeb.Core.Entities;
 using DrMohamedWeb.Infrastructure.Data;
 using DrMohamedWeb.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -16,6 +18,7 @@ builder.Services.AddDbContext<AmanDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IFileUploadService, FileUploadService>();
+builder.Services.AddSingleton<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
 
 builder.Services.AddHostedService<ResultFileCleanupService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -109,6 +112,23 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await dbContext.Database.MigrateAsync();
+
+        // Ensure a default admin account exists so the app is never locked out
+        if (!await dbContext.AdminUsers.AnyAsync())
+        {
+            var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<AdminUser>>();
+            dbContext.AdminUsers.Add(new AdminUser
+            {
+                Email = "admin@amanlab.com",
+                FullName = "مدير النظام",
+                Role = "Admin",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                PasswordHash = hasher.HashPassword(new AdminUser(), "strongPassword")
+            });
+            await dbContext.SaveChangesAsync();
+            Console.WriteLine("Default admin account seeded (admin@amanlab.com).");
+        }
     }
     catch (Exception ex)
     {

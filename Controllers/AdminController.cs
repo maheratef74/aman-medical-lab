@@ -1,13 +1,16 @@
 using DrMohamedWeb.Application.Interfaces;
+using DrMohamedWeb.Core.Entities;
 using DrMohamedWeb.Infrastructure.Data;
 using DrMohamedWeb.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
 
@@ -24,17 +27,37 @@ namespace DrMohamedWeb.Controllers
         private readonly AmanDbContext _context;
         private readonly ITokenService _tokenService;
         private readonly IConfiguration _config;
+        private readonly IPasswordHasher<AdminUser> _passwordHasher;
 
-        public AdminController(AmanDbContext context, ITokenService tokenService, IConfiguration config)
+        public AdminController(AmanDbContext context, ITokenService tokenService, IConfiguration config,
+            IPasswordHasher<AdminUser> passwordHasher)
         {
             _context = context;
             _tokenService = tokenService;
             _config = config;
+            _passwordHasher = passwordHasher;
         }
 
         private bool SecureCookies =>
             Request.IsHttps ||
             string.Equals(Request.Headers["X-Forwarded-Proto"], "https", StringComparison.OrdinalIgnoreCase);
+
+        private bool IsAjaxRequest =>
+            Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
+            Request.Headers.Accept.ToString().Contains("application/json");
+
+        private static bool IsValidEmail(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return false;
+            try
+            {
+                return new MailAddress(email).Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         [HttpGet]
         public IActionResult Login()
@@ -49,73 +72,92 @@ namespace DrMohamedWeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string email, string password)
         {
-            // Fixed credentials as requested
-            if (email == "admin@amanlab.com" && password == "strongPassword")
+            var user = await _context.AdminUsers
+                .FirstOrDefaultAsync(u => u.Email == (email ?? "").Trim());
+
+            if (user == null || user.PasswordHash == null ||
+                _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password ?? "") == PasswordVerificationResult.Failed)
             {
-                var claims = new List<Claim>
+                if (IsAjaxRequest)
                 {
-                    new Claim(ClaimTypes.Name, email),
-                    new Claim(ClaimTypes.Role, "Admin")
-                };
-
-                var claimsIdentity = new ClaimsIdentity(
-                    claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = true,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(15)
-                };
-
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    authProperties);
-
-                // Generate JWT Access Token (15m) & Refresh Token (7d)
-                var accessToken = _tokenService.GenerateAccessToken(email, "Admin");
-                var refreshToken = _tokenService.GenerateRefreshToken();
-                await _tokenService.SaveRefreshTokenAsync(email, refreshToken);
-
-                // Set HttpOnly Cookies
-                Response.Cookies.Append("X-Access-Token", accessToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = SecureCookies,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTimeOffset.UtcNow.AddMinutes(15)
-                });
-
-                Response.Cookies.Append("X-Refresh-Token", refreshToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = SecureCookies,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTimeOffset.UtcNow.AddDays(7)
-                });
-
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" || Request.Headers.Accept.ToString().Contains("application/json"))
-                {
-                    return Json(new
-                    {
-                        success = true,
-                        accessToken = accessToken,
-                        refreshToken = refreshToken,
-                        expiresIn = 900,
-                        redirectUrl = Url.Action("Dashboard", "Admin")
-                    });
+                    return Unauthorized(new { success = false, message = "Invalid login attempt." });
                 }
 
-                return RedirectToAction("Dashboard");
+                ViewBag.Error = "بيانات الدخول غير صحيحة.";
+                return View();
             }
 
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest" || Request.Headers.Accept.ToString().Contains("application/json"))
+            if (!user.IsActive)
             {
-                return Unauthorized(new { success = false, message = "Invalid login attempt." });
+                if (IsAjaxRequest)
+                {
+                    return Unauthorized(new { success = false, message = "Account is disabled." });
+                }
+
+                ViewBag.Error = "هذا الحساب موقوف. تواصل مع مدير النظام.";
+                return View();
             }
 
-            ViewBag.Error = "Invalid login attempt.";
-            return View();
+            user.LastLoginAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim("UserId", user.Id.ToString()),
+                new Claim("FullName", string.IsNullOrWhiteSpace(user.FullName) ? user.Email : user.FullName)
+            };
+
+            var claimsIdentity = new ClaimsIdentity(
+                claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(15)
+            };
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties);
+
+            // Generate JWT Access Token (15m) & Refresh Token (7d)
+            var accessToken = _tokenService.GenerateAccessToken(user.Email, user.Role);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            await _tokenService.SaveRefreshTokenAsync(user.Email, refreshToken);
+
+            // Set HttpOnly Cookies
+            Response.Cookies.Append("X-Access-Token", accessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = SecureCookies,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+            });
+
+            Response.Cookies.Append("X-Refresh-Token", refreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = SecureCookies,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
+            });
+
+            if (IsAjaxRequest)
+            {
+                return Json(new
+                {
+                    success = true,
+                    accessToken = accessToken,
+                    refreshToken = refreshToken,
+                    expiresIn = 900,
+                    redirectUrl = Url.Action("Dashboard", "Admin")
+                });
+            }
+
+            return RedirectToAction("Dashboard");
         }
 
         [HttpPost]
@@ -138,10 +180,23 @@ namespace DrMohamedWeb.Controllers
                 return Unauthorized(new { success = false, message = "Invalid or expired refresh token." });
             }
 
+            var refreshedUser = await _context.AdminUsers
+                .FirstOrDefaultAsync(u => u.Email == result.Value.username);
+
+            if (refreshedUser == null || !refreshedUser.IsActive)
+            {
+                Response.Cookies.Delete("X-Access-Token");
+                Response.Cookies.Delete("X-Refresh-Token");
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return Unauthorized(new { success = false, message = "Invalid or expired refresh token." });
+            }
+
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, "admin@amanlab.com"),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Name, refreshedUser.Email),
+                new Claim(ClaimTypes.Role, refreshedUser.Role),
+                new Claim("UserId", refreshedUser.Id.ToString()),
+                new Claim("FullName", string.IsNullOrWhiteSpace(refreshedUser.FullName) ? refreshedUser.Email : refreshedUser.FullName)
             };
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignInAsync(
@@ -318,6 +373,181 @@ namespace DrMohamedWeb.Controllers
             Response.Cookies.Delete("X-Refresh-Token");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Users()
+        {
+            var users = await _context.AdminUsers
+                .OrderBy(u => u.Email)
+                .ToListAsync();
+            return View(users);
+        }
+
+        [Authorize(Roles = "Admin")]
+        public IActionResult CreateUser()
+        {
+            return View(new CreateAdminUserViewModel());
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateUser(CreateAdminUserViewModel model)
+        {
+            var email = model.Email?.Trim() ?? "";
+
+            if (!IsValidEmail(email))
+            {
+                ModelState.AddModelError(nameof(model.Email), "يرجى إدخال بريد إلكتروني صحيح.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Password) || model.Password.Length < 8)
+            {
+                ModelState.AddModelError(nameof(model.Password), "كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
+            }
+
+            if (await _context.AdminUsers.AnyAsync(u => u.Email == email))
+            {
+                ModelState.AddModelError(nameof(model.Email), "هذا البريد الإلكتروني مستخدم بالفعل.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = new AdminUser
+            {
+                Email = email,
+                FullName = model.FullName?.Trim() ?? "",
+                Role = string.IsNullOrWhiteSpace(model.Role) ? "Admin" : model.Role,
+                IsActive = model.IsActive,
+                CreatedAt = DateTime.UtcNow,
+                PasswordHash = _passwordHasher.HashPassword(new AdminUser(), model.Password)
+            };
+
+            _context.AdminUsers.Add(user);
+            await _context.SaveChangesAsync();
+
+            TempData["Toast"] = "تم إنشاء الحساب بنجاح.";
+            return RedirectToAction("Users");
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EditUser(int id)
+        {
+            var user = await _context.AdminUsers.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new EditAdminUserViewModel
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                Role = user.Role,
+                IsActive = user.IsActive,
+                IsCurrentUser = string.Equals(user.Email, User.Identity?.Name, StringComparison.OrdinalIgnoreCase)
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditUser(EditAdminUserViewModel model)
+        {
+            var user = await _context.AdminUsers.FindAsync(model.Id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var email = model.Email?.Trim() ?? "";
+            var isSelf = string.Equals(user.Email, User.Identity?.Name, StringComparison.OrdinalIgnoreCase);
+
+            if (!IsValidEmail(email))
+            {
+                ModelState.AddModelError(nameof(model.Email), "يرجى إدخال بريد إلكتروني صحيح.");
+            }
+
+            if (await _context.AdminUsers.AnyAsync(u => u.Email == email && u.Id != user.Id))
+            {
+                ModelState.AddModelError(nameof(model.Email), "هذا البريد الإلكتروني مستخدم بالفعل.");
+            }
+
+            if (isSelf && user.IsActive && !model.IsActive)
+            {
+                ModelState.AddModelError(nameof(model.IsActive), "لا يمكنك إيقاف حسابك الحالي.");
+            }
+
+            if (!string.IsNullOrEmpty(model.Password) && model.Password.Length < 8)
+            {
+                ModelState.AddModelError(nameof(model.Password), "كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.IsCurrentUser = isSelf;
+                return View(model);
+            }
+
+            user.Email = email;
+            user.FullName = model.FullName?.Trim() ?? "";
+            user.Role = string.IsNullOrWhiteSpace(model.Role) ? "Admin" : model.Role;
+            user.IsActive = model.IsActive;
+
+            if (!string.IsNullOrWhiteSpace(model.Password))
+            {
+                user.PasswordHash = _passwordHasher.HashPassword(user, model.Password);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Toast"] = "تم تحديث الحساب بنجاح.";
+            return RedirectToAction("Users");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleUser(int id)
+        {
+            var user = await _context.AdminUsers.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            if (string.Equals(user.Email, User.Identity?.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ToastError"] = "لا يمكنك إيقاف حسابك الحالي.";
+                return RedirectToAction("Users");
+            }
+
+            user.IsActive = !user.IsActive;
+
+            if (!user.IsActive)
+            {
+                var tokens = await _context.RefreshTokens
+                    .Where(r => r.Username == user.Email && !r.IsRevoked)
+                    .ToListAsync();
+
+                foreach (var token in tokens)
+                {
+                    token.IsRevoked = true;
+                    token.RevokedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Toast"] = user.IsActive ? "تم تفعيل الحساب." : "تم إيقاف الحساب.";
+            return RedirectToAction("Users");
         }
     }
 }

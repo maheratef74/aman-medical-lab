@@ -13,6 +13,7 @@ namespace DrMohamedWeb.Infrastructure.Data
         public DbSet<PatientVisit> PatientVisits { get; set; }
         public DbSet<TestResult> TestResults { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<AdminUser> AdminUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +31,11 @@ namespace DrMohamedWeb.Infrastructure.Data
                 .WithOne(t => t.Visit)
                 .HasForeignKey(t => t.VisitId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AdminUser>(entity =>
+            {
+                entity.HasIndex(u => u.Email).IsUnique();
+            });
         }
     }
 }

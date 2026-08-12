@@ -1,0 +1,198 @@
+@model DrMohamedWeb.ViewModels.EditAdminUserViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "تعديل حساب";
+    ViewData["Breadcrumb"] = "معمل أمان / المستخدمون / تعديل حساب";
+}
+
+<!-- ═══════════════════════════════════════
+     PAGE HEADER
+═══════════════════════════════════════ -->
+<div class="mb-6">
+    <div class="flex items-center gap-2 text-sm text-slate-400 mb-3">
+        <a asp-action="Users" class="hover:text-brand-600 transition-colors">المستخدمون</a>
+        <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+        <span class="text-slate-600 font-semibold">تعديل الحساب</span>
+    </div>
+    <h2 class="text-2xl font-extrabold text-slate-800">تعديل الحساب</h2>
+    <p class="text-sm text-slate-500 mt-1">تحديث بيانات الحساب أو إعادة تعيين كلمة المرور</p>
+</div>
+
+<!-- ═══════════════════════════════════════
+     FORM CARD
+═══════════════════════════════════════ -->
+<div class="max-w-xl">
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+
+        <div class="h-1.5 bg-gradient-to-l from-brand-600 to-brand-800"></div>
+
+        <div class="p-6 sm:p-8">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="flex items-start gap-3 p-4 mb-6 rounded-xl bg-red-50 border border-red-200">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 shrink-0 mt-0.5"></i>
+                    <div>
+                        <p class="text-sm font-bold text-red-700 mb-1">يوجد أخطاء في البيانات:</p>
+                        <div asp-validation-summary="All" class="text-sm text-red-600 space-y-0.5"></div>
+                    </div>
+                </div>
+            }
+
+            <form asp-action="EditUser" method="post" id="editUserForm" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="IsCurrentUser" />
+
+                <!-- Full name -->
+                <div class="mb-5">
+                    <label asp-for="FullName" class="block text-sm font-bold text-slate-700 mb-1.5">
+                        الاسم الكامل
+                    </label>
+                    <input asp-for="FullName"
+                           class="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 hover:border-slate-300 transition-colors"
+                           placeholder="مثال: أحمد محمد"
+                           autocomplete="name" />
+                    <span asp-validation-for="FullName" class="mt-1.5 text-xs font-semibold text-red-600"></span>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-5">
+                    <label asp-for="Email" class="block text-sm font-bold text-slate-700 mb-1.5">
+                        البريد الإلكتروني
+                        <span class="text-brand-600 mr-0.5">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-slate-400">
+                            <i data-lucide="mail" class="w-4 h-4"></i>
+                        </span>
+                        <input asp-for="Email"
+                               type="email"
+                               class="w-full pr-10 pl-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 hover:border-slate-300 transition-colors"
+                               dir="ltr"
+                               style="text-align: right;"
+                               required
+                               autocomplete="username" />
+                    </div>
+                    <span asp-validation-for="Email" class="mt-1.5 text-xs font-semibold text-red-600"></span>
+                </div>
+
+                <!-- Password (optional reset) -->
+                <div class="mb-5">
+                    <label asp-for="Password" class="block text-sm font-bold text-slate-700 mb-1.5">
+                        كلمة المرور الجديدة
+                        <span class="text-slate-400 font-medium text-xs">(اختياري)</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-slate-400">
+                            <i data-lucide="key-round" class="w-4 h-4"></i>
+                        </span>
+                        <input asp-for="Password"
+                               type="password"
+                               class="w-full pr-10 pl-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 placeholder-slate-400 hover:border-slate-300 transition-colors"
+                               placeholder="اتركه فارغاً للإبقاء على كلمة المرور الحالية"
+                               minlength="8"
+                               autocomplete="new-password" />
+                        <button type="button" data-toggle-password="#Password"
+                                class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 hover:text-slate-600 transition-colors">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <p class="mt-1.5 text-xs text-slate-400 font-medium">يُحفظ مشفّراً ولا يمكن لأحد الاطلاع عليه</p>
+                    <span asp-validation-for="Password" class="mt-1.5 text-xs font-semibold text-red-600"></span>
+                </div>
+
+                <!-- Role -->
+                <div class="mb-5">
+                    <label asp-for="Role" class="block text-sm font-bold text-slate-700 mb-1.5">الدور</label>
+                    <select asp-for="Role"
+                            class="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl bg-slate-50 text-slate-800 hover:border-slate-300 transition-colors">
+                        <option value="Admin">مدير</option>
+                        <option value="Assistant">مساعد</option>
+                        <option value="Staff">موظف</option>
+                    </select>
+                </div>
+
+                <!-- IsActive -->
+                <div class="mb-7">
+                    @if (Model.IsCurrentUser)
+                    {
+                        <div class="flex items-center gap-3 p-4 rounded-xl border border-blue-100 bg-blue-50">
+                            <i data-lucide="info" class="w-5 h-5 text-blue-500 shrink-0"></i>
+                            <p class="text-xs font-semibold text-blue-700">
+                                لا يمكنك إيقاف حسابك الحالي. لإيقاف هذا الحساب، سجّل الدخول بحساب آخر ثم عدّل هنا.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer select-none">
+                            <input asp-for="IsActive" type="checkbox" class="w-5 h-5 rounded accent-brand-600" />
+                            <span class="flex-1">
+                                <span class="block text-sm font-bold text-slate-700">حساب نشط</span>
+                                <span class="block text-xs text-slate-400 font-medium">يمكن لهذا الحساب تسجيل الدخول</span>
+                            </span>
+                        </label>
+                        <span asp-validation-for="IsActive" class="mt-1.5 text-xs font-semibold text-red-600"></span>
+                    }
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex flex-col-reverse sm:flex-row sm:items-center gap-3">
+                    <a asp-action="Users"
+                       class="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors">
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        إلغاء والعودة
+                    </a>
+                    <button type="submit"
+                            id="submitBtn"
+                            class="flex items-center justify-center gap-2 flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-bold shadow-lg shadow-brand-600/25 hover:bg-brand-700 hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        حفظ التعديلات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    lucide.createIcons();
+
+    document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var sel = btn.getAttribute('data-toggle-password');
+            var input = document.querySelector(sel);
+            var icon = btn.querySelector('[data-lucide]');
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                if (icon) icon.setAttribute('data-lucide', 'eye');
+            }
+            if (icon) window.lucide.createIcons();
+        });
+    });
+
+    document.getElementById('editUserForm').addEventListener('submit', function (e) {
+        var email = document.querySelector('[name="Email"]');
+        var pwd   = document.querySelector('[name="Password"]');
+        var ok = true;
+
+        function clear(input) { input.classList.remove('border-red-400', 'bg-red-50'); input.classList.add('border-slate-200', 'bg-slate-50'); }
+        function err(input)   { input.classList.remove('border-slate-200', 'bg-slate-50'); input.classList.add('border-red-400', 'bg-red-50'); }
+
+        if (!email.value || email.value.indexOf('@@') < 1) { err(email); ok = false; } else { clear(email); }
+        if (pwd.value && pwd.value.length < 8) { err(pwd); ok = false; } else { clear(pwd); }
+
+        if (!ok) { e.preventDefault(); return; }
+
+        var btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جاري الحفظ…';
+    });
+</script>
+}

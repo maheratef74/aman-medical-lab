@@ -75,7 +75,7 @@ namespace DrMohamedWeb.Infrastructure.Services
             return refreshToken;
         }
 
-        public async Task<(string newAccessToken, string newRefreshToken)?> RefreshTokensAsync(string refreshToken)
+        public async Task<(string username, string newAccessToken, string newRefreshToken)?> RefreshTokensAsync(string refreshToken)
         {
             if (string.IsNullOrWhiteSpace(refreshToken))
                 return null;
@@ -91,13 +91,14 @@ namespace DrMohamedWeb.Infrastructure.Services
             existingToken.RevokedAt = DateTime.UtcNow;
 
             // Generate new pair
-            var newAccessToken = GenerateAccessToken(existingToken.Username);
+            var username = existingToken.Username;
+            var newAccessToken = GenerateAccessToken(username);
             var newRefreshToken = GenerateRefreshToken();
 
-            await SaveRefreshTokenAsync(existingToken.Username, newRefreshToken);
+            await SaveRefreshTokenAsync(username, newRefreshToken);
             await _context.SaveChangesAsync();
 
-            return (newAccessToken, newRefreshToken);
+            return (username, newAccessToken, newRefreshToken);
         }
 
         public async Task RevokeRefreshTokenAsync(string token)
