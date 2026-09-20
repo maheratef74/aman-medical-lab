@@ -6,6 +6,8 @@ const CORE_ASSETS = [
     '/admin-manifest.webmanifest',
     '/css/amanlab.css',
     '/css/admin.css',
+    '/lib/lucide/lucide.min.js',
+    '/lib/font-awesome/css/all.min.css',
     '/images/aman-logo.png',
     '/images/app-icon.jpeg',
     '/icons/icon-192.png',
