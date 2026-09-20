@@ -1,0 +1,15 @@
+{
+  "name": "aman-medical-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tailwind CSS build pipeline for Aman Medical Lab administration portal",
+  "scripts": {
+    "build:css": "tailwindcss -i ./Styles/admin.css -o ./wwwroot/css/admin.css --minify",
+    "watch:css": "tailwindcss -i ./Styles/admin.css -o ./wwwroot/css/admin.css --watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17"
+  }
+}

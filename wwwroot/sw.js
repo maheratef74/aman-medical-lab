@@ -5,6 +5,7 @@ const CORE_ASSETS = [
     '/manifest.webmanifest',
     '/admin-manifest.webmanifest',
     '/css/amanlab.css',
+    '/css/admin.css',
     '/images/aman-logo.png',
     '/images/app-icon.jpeg',
     '/icons/icon-192.png',
