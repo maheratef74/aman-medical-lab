@@ -104,6 +104,9 @@ namespace DrMohamedWeb.Migrations
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("VisitDate")
                         .HasColumnType("datetime2");
 
@@ -155,6 +158,9 @@ namespace DrMohamedWeb.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("DownloadCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -165,6 +171,9 @@ namespace DrMohamedWeb.Migrations
 
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
 
                     b.Property<int>("VisitId")
                         .HasColumnType("int");

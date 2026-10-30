@@ -17,6 +17,10 @@ namespace DrMohamedWeb.Controllers
             _context = context;
         }
 
+        // Visit/document counters are only for patient traffic.
+        // Logged-in staff previewing the public pages must not inflate them.
+        private bool ShouldTrackViews() => User.Identity?.IsAuthenticated != true;
+
         [HttpGet]
         public IActionResult Search()
         {
@@ -49,6 +53,12 @@ namespace DrMohamedWeb.Controllers
             {
                 TempData["ErrorMessage"] = "لا توجد زيارات متاحة لهذا المريض";
                 return RedirectToAction(nameof(Search));
+            }
+
+            if (ShouldTrackViews())
+            {
+                latestVisit.ViewCount++;
+                await _context.SaveChangesAsync();
             }
 
             var viewModel = new PatientResultViewModel
@@ -97,6 +107,12 @@ namespace DrMohamedWeb.Controllers
                 return NotFound("<div class='alert alert-danger text-center'>لا توجد زيارات متاحة لهذا المريض</div>");
             }
 
+            if (ShouldTrackViews())
+            {
+                latestVisit.ViewCount++;
+                await _context.SaveChangesAsync();
+            }
+
             var viewModel = new PatientResultViewModel
             {
                 PatientName = patient.Name,
@@ -135,6 +151,15 @@ namespace DrMohamedWeb.Controllers
             {
                 TempData["ErrorMessage"] = "لا توجد زيارات لهذا المريض";
                 return RedirectToAction(nameof(Search));
+            }
+
+            if (ShouldTrackViews())
+            {
+                foreach (var visit in patient.Visits)
+                {
+                    visit.ViewCount++;
+                }
+                await _context.SaveChangesAsync();
             }
 
             var viewModel = new PatientResultViewModel
@@ -176,6 +201,15 @@ namespace DrMohamedWeb.Controllers
                 return NotFound("<div class='alert alert-danger text-center'>لا توجد زيارات لهذا المريض</div>");
             }
 
+            if (ShouldTrackViews())
+            {
+                foreach (var visit in patient.Visits)
+                {
+                    visit.ViewCount++;
+                }
+                await _context.SaveChangesAsync();
+            }
+
             var viewModel = new PatientResultViewModel
             {
                 PatientName = patient.Name,
@@ -198,10 +232,46 @@ namespace DrMohamedWeb.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ViewFile(int id)
+        {
+            var testResult = await _context.TestResults
+                .Include(t => t.Visit)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (testResult == null || string.IsNullOrWhiteSpace(testResult.FilePath) ||
+                testResult.Visit == null || !testResult.Visit.IsAvailable)
+            {
+                return NotFound();
+            }
+
+            var filepath = System.IO.Path.Combine(
+                           System.IO.Directory.GetCurrentDirectory(),
+                           "wwwroot", testResult.FilePath.TrimStart('/'));
+
+            if (!System.IO.File.Exists(filepath))
+            {
+                return NotFound();
+            }
+
+            if (ShouldTrackViews())
+            {
+                testResult.ViewCount++;
+                await _context.SaveChangesAsync();
+            }
+
+            // Served inline so the PDF opens in the browser tab.
+            return PhysicalFile(filepath, "application/pdf", enableRangeProcessing: true);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Download(int id)
         {
-            var testResult = await _context.TestResults.FindAsync(id);
-            if (testResult == null || string.IsNullOrWhiteSpace(testResult.FilePath))
+            var testResult = await _context.TestResults
+                .Include(t => t.Visit)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (testResult == null || string.IsNullOrWhiteSpace(testResult.FilePath) ||
+                testResult.Visit == null || !testResult.Visit.IsAvailable)
             {
                 return NotFound();
             }
@@ -215,6 +285,12 @@ namespace DrMohamedWeb.Controllers
             if (!System.IO.File.Exists(filepath))
             {
                 return NotFound();
+            }
+
+            if (ShouldTrackViews())
+            {
+                testResult.DownloadCount++;
+                await _context.SaveChangesAsync();
             }
 
             var fileName = System.IO.Path.GetFileName(filepath);

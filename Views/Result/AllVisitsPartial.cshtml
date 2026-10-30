@@ -70,7 +70,7 @@
                                             </div>
                                         </div>
                                         <div class="d-flex gap-2">
-                                            <a href="@Url.Content("~/" + test.FilePath.TrimStart('/'))" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold">
+                                            <a asp-action="ViewFile" asp-controller="Result" asp-route-id="@test.Id" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold">
                                                 <i class="bi bi-eye-fill me-1"></i> عرض
                                             </a>
                                             <a asp-action="Download" asp-controller="Result" asp-route-id="@test.Id" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">

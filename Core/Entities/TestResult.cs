@@ -9,6 +9,8 @@ namespace DrMohamedWeb.Core.Entities
         public string TestName { get; set; } = string.Empty;
         public string FilePath { get; set; } = string.Empty;
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+        public int ViewCount { get; set; } = 0;
+        public int DownloadCount { get; set; } = 0;
 
         // Navigation property
         public PatientVisit? Visit { get; set; }

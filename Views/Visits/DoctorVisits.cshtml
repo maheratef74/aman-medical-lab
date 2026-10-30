@@ -53,6 +53,7 @@
                         <th class="px-5 py-3">رقم الهاتف</th>
                         <th class="px-5 py-3">الوقت</th>
                         <th class="px-5 py-3 text-center">النتائج</th>
+                        <th class="px-5 py-3 text-center">المشاهدات</th>
                         <th class="px-5 py-3 text-center">الإجراءات</th>
                     </tr>
                 </thead>
@@ -60,7 +61,7 @@
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="5" class="px-5 py-8 text-center text-slate-400 font-medium">
+                            <td colspan="6" class="px-5 py-8 text-center text-slate-400 font-medium">
                                 لا توجد زيارات مسجلة في هذا اليوم.
                             </td>
                         </tr>
@@ -121,6 +122,20 @@
                                     @(visit.TestResults?.Count ?? 0)
                                 </span>
                             </td>
+                            <td class="px-5 py-3 text-center">
+                                <div class="inline-flex flex-col items-center gap-1">
+                                    <span class="inline-flex items-center gap-1 bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full text-[11px] font-bold border border-sky-100"
+                                          title="عدد مرات فتح المريض للزيارة">
+                                        <i data-lucide="eye" class="w-3 h-3"></i>
+                                        @visit.ViewCount
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[11px] font-bold border border-amber-100"
+                                          title="عدد مرات عرض ملفات الزيارة">
+                                        <i data-lucide="file-text" class="w-3 h-3"></i>
+                                        @(visit.TestResults?.Sum(t => t.ViewCount) ?? 0)
+                                    </span>
+                                </div>
+                            </td>
                             <td class="px-5 py-3 text-center" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-center gap-2">
                                     <!-- Toggle Availability -->
@@ -154,7 +169,7 @@
                             </td>
                         </tr>
                         <tr id="details-@visit.Id" class="hidden bg-slate-50 border-b border-slate-100">
-                            <td colspan="5" class="px-5 py-4">
+                            <td colspan="6" class="px-5 py-4">
                                 @if (visit.TestResults != null && visit.TestResults.Any())
                                 {
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -176,6 +191,14 @@
                                                             <span dir="ltr" class="font-mono text-slate-700">@fileTimeStr</span> <span class="text-slate-700 font-bold">@filePeriod</span> <span class="text-slate-400 text-[10px] mr-1">@fileDate</span>
                                                         </p>
                                                     </div>
+                                                </div>
+                                                <div class="flex flex-col items-center gap-1 shrink-0">
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-100 px-1.5 py-0.5 rounded-full" title="عدد مرات عرض الملف">
+                                                        <i data-lucide="eye" class="w-3 h-3"></i> @test.ViewCount
+                                                    </span>
+                                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded-full" title="عدد مرات تحميل الملف">
+                                                        <i data-lucide="download" class="w-3 h-3"></i> @test.DownloadCount
+                                                    </span>
                                                 </div>
                                                 <div class="flex items-center gap-1 shrink-0">
                                                     <a href="@test.FilePath" target="_blank" class="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="عرض الملف">
